@@ -26,4 +26,13 @@ def tensor_tsta(X, D0, B0)
         B0 = B1
         t1 = t2
         fobj(i) = obj_fun(X, D0, B1)
+    B = B1
+
+    return B, fobj
+
+def obj_fun(X, D, B)
+    diff = X - tensor_product(D, '', B, '')
+    fobj = 0.5 * np.linalg.norm(diff) ** 2 + params.beta * np.sum(np.abs(B))
+
+    return fobj
 
