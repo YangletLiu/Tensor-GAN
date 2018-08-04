@@ -25,7 +25,7 @@ def tensor_tsta(X, D0, B0)
         C1 = B1 + ((t1 - 1) / t2) * (B1 - B0)
         B0 = B1
         t1 = t2
-        fobj(i) = obj_fun(X, D0, B1)
+        fobj[i] = obj_fun(X, D0, B1)
     B = B1
 
     return B, fobj
