@@ -7,7 +7,7 @@ import numpy as np
 
 
 def tensor_dl(X_hat, S, n_basis):
-    S_hat = np.fft.fftn(S, axes=3) #mabe incorrect
+    S_hat = np.fft.fft(S, axis=-1) #mabe incorrect
     dual_lambda = 10 * np.abs(np.random.rand(n_basis, 1))
     m, _, k = np.shape(X_hat)
     r = n_basis
@@ -36,7 +36,7 @@ def tensor_dl(X_hat, S, n_basis):
         B_hat_k_t = np.linalg.pinv(SS_t_k + LAMBDA) * XS_t_k
         B_hat[:,:,kk] = np.transpose(B_hat_k_t)
 
-    B = np.fft.ifftn(B_hat, axes=3)
+    B = np.fft.ifft(B_hat, axis=-1)
     B[np.where(B==None)] = 0
     B = np.real(B)
 
