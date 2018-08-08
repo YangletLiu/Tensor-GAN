@@ -64,4 +64,4 @@ def fobj_basis_dual(lmd, XS_t)
 
         f = np.real(f + k * np.sum(lmd))
 
-        return f
+    return f
