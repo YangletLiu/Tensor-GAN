@@ -1,7 +1,8 @@
 import numpy as np
+from params import Params as params
 
 
-def tensor_tsta(X, D0, B0)
+def tensor_tsta(X, D0, B0):
 
     _, n, k = np.shape(X)
 
@@ -30,9 +31,29 @@ def tensor_tsta(X, D0, B0)
 
     return B, fobj
 
-def obj_fun(X, D, B)
+def obj_fun(X, D, B):
     diff = X - tensor_product(D, '', B, '')
     fobj = 0.5 * np.linalg.norm(diff) ** 2 + params.beta * np.sum(np.abs(B))
 
     return fobj
+
+def blk_circ_mat(A):
+    sz_A = np.shape(A)
+    dim = np.zeros(1,2)
+    dim[0] = sz_A[0] * sz_A[2]
+    dim[1] = sz_A[1] * sz_A[2]
+    A_C = np.zeros(dim)
+    A_mat = np.reshape(np.transpose(A, [0, 2, 1]), [dim[0], sz_A[1]])
+    A_c[:,:sz_A[1]] = A_mat
+    for k in range(1, sz_A[2]):
+        A_c[:,(k-1)*sz_A[1]+1:k*sz_A[1]] = np.roll(A_mat, (k-1)*sz_A[0], axis=0)
+
+    return A_c
+
+if __name__ == '__main__':
+    X = np.random.rand(4,3,2)
+    D0 = np.random.rand()
+    a = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]
+    print(np.mat(a))
+    print(np.roll(a,1,axis=0))
 
