@@ -7,30 +7,30 @@ def tensor_tsta(X, D0, B0):
 
     _, n, k = np.shape(X)
 
-    D0_t_D0 = tensor_product(D0, 't', D0, [])
+    D0_t_D0 = tensor_product(D0, 't', D0, '')
 
     D0_c = blk_circ_mat(D0_t_D0)
     L0 = np.linalg.norm(D0_c, 2)
 
-    D0_t_X = tensor_product(D0, 't', X, [])
+    D0_t_X = tensor_product(D0, 't', X, '')
 
     C1 = B0
     t1 = 1
-    fobj = np.zeros([params.r, n, k])
+    #fobj = np.zeros(params.max_iter)
 
     for i in range(params.max_iter):
         L1 = params.eta ** i * L0
         grad_C1 = tensor_product(D0_t_D0, 't', C1, []) - D0_t_X
         temp = C1 - grad_C1 / L1
-        B1 = np.sign(temp.all) * max(abs(temp) - params.beta / L1, 0)
+        B1 = np.sign(temp) * np.max(np.abs(temp) - params.beta / L1, 0)
         t2 = (1 + np.sqrt(1 + 4 * t1 ** 2)) / 2
         C1 = B1 + ((t1 - 1) / t2) * (B1 - B0)
         B0 = B1
         t1 = t2
-        fobj[i] = obj_fun(X, D0, B1)
+        #fobj[i] = obj_fun(X, D0, B1)
     B = B1
 
-    return B, fobj
+    return B
 
 def obj_fun(X, D, B):
     diff = X - tensor_product(D, '', B, '')
@@ -53,7 +53,6 @@ def blk_circ_mat(A):
 
 if __name__ == '__main__':
     s = np.random.rand(4,4)
-    print(s[:,0:1])
     X = np.random.rand(4,3,2)
     D0 = np.random.rand(4,2,2)
     B0 = np.zeros([2,3,2])
