@@ -1,5 +1,5 @@
 import numpy as np
-from params import Params as params
+from hyper_params import HyperParams as params
 from tensor_product import tensor_product
 
 
@@ -20,7 +20,7 @@ def tensor_tsta(X, D0, B0):
 
     for i in range(params.max_iter):
         L1 = params.eta ** i * L0
-        grad_C1 = tensor_product(D0_t_D0, 't', C1, []) - D0_t_X
+        grad_C1 = tensor_product(D0_t_D0, 't', C1, '') - D0_t_X
         temp = C1 - grad_C1 / L1
         B1 = np.sign(temp) * np.max(np.abs(temp) - params.beta / L1, 0)
         t2 = (1 + np.sqrt(1 + 4 * t1 ** 2)) / 2

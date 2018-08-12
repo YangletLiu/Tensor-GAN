@@ -9,7 +9,7 @@ from init_3d import *
 from block_3d import *
 from tensor_dl import *
 from tensor_tsta import *
-from params import Params as params
+from hyper_params import HyperParams as params
 from matplotlib import pyplot as plt
 
 def tdsc():

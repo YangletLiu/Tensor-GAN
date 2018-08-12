@@ -4,6 +4,7 @@
 # Time: 2018/8/2 22:11
 
 import numpy as np
+from hyper_params import HyperParams as params
 from scipy.optimize import minimize
 
 
@@ -20,8 +21,8 @@ def tensor_dl(X_hat, S, n_basis):
         x_hat_k = X_hat[:, :, kk]
         s_hat_k = S_hat[:, :, kk]
 
-        SS_t[:, :, kk] = np.matmul(s_hat_k, np.transpose(s_hat_k))
-        XS_t[:, :, kk] = np.matmul(x_hat_k, np.transpose(s_hat_k))
+        SS_t[:, :, kk] = np.matmul(s_hat_k, s_hat_k.T)
+        XS_t[:, :, kk] = np.matmul(x_hat_k, s_hat_k.T)
 
     bnds = tuple([0, None] for _ in range(len(dual_lambda)))
     fun = lambda x: fobj_basis_dual(x, XS_t, SS_t, k)
@@ -34,7 +35,7 @@ def tensor_dl(X_hat, S, n_basis):
     for kk in range(k):
         SS_t_k = np.squeeze(SS_t[:, :, kk])
         XS_t_k = np.squeeze(XS_t[:, :, kk])
-        B_hat_k_t = np.matmul(np.linalg.pinv(SS_t_k + LAMBDA), np.transpose(XS_t_k))
+        B_hat_k_t = np.matmul(np.linalg.pinv(SS_t_k + LAMBDA), XS_t_k.T)
         B_hat[:, :, kk] = np.transpose(B_hat_k_t)
 
     B = np.fft.ifft(B_hat, axis=-1)
@@ -58,9 +59,9 @@ def fobj_basis_dual(x, XS_t, SS_t, k):
         SS_t_inv = np.linalg.pinv(SS_t_k + LAMBDA)
 
         if m > r:
-            f += np.trace(np.matmul(SS_t_inv, np.matmul(np.transpose(XS_t_k), XS_t_k)))
+            f += np.trace(np.matmul(SS_t_inv, np.matmul(XS_t_k.T, XS_t_k)))
         else:
-            f += np.trace(np.matmul(np.matmul(XS_t_k, SS_t_inv), np.transpose(XS_t_k)))
+            f += np.trace(np.matmul(np.matmul(XS_t_k, SS_t_inv), XS_t_k.T))
 
         f = np.real(f + k * np.sum(x))
 
