@@ -34,7 +34,7 @@ def block_3d_tensor(X_p, size):
     W = np.zeros(size)
 
     Z_p = np.reshape( \
-        np.transpose(Y_p, [0, 2, 1]), \
+        np.transpose(X_p, [0, 2, 1]), \
         [psize, psize, psize, np.shape(X_p)[1]])
 
     for i in range(psize):
@@ -52,9 +52,9 @@ def block_3d_tensor(X_p, size):
 
 
 if __name__ == '__main__':
-    Y_p = np.random.rand(25,33614,5)
+    YY_p = np.random.rand(25,33614,5)
     size=[101,101,31]
-    print(block_3d_tensor(Y_p, size).shape)
+    print(block_3d_tensor(YY_p, size).shape)
 
 
 
