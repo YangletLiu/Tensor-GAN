@@ -18,7 +18,7 @@ def tensor_tsta(X, D, B0):
     t1 = 1
     #fobj = np.zeros(params.max_iter)
 
-    for i in range(params.max_iter):
+    for i in range(params.tsta_max_iter):
         L1 = params.eta ** i * L0
         grad_C1 = tensor_product(D_t_D, 't', C1, '') - D_t_X
         temp1 = C1 - grad_C1 / L1
