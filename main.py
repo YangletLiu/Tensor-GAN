@@ -29,7 +29,7 @@ def tdsc():
     time_s = time.time()
 
     for i in range(params.sc_max_iter):
-        print('Iteration: {} / {}'.format(i, params.sc_iter_num),)
+        print('Iteration: {} / {}'.format(i, params.sc_max_iter),)
         if i == 0:
             B = tensor_tsta(X_p, D0, B0)
         else:
@@ -37,16 +37,22 @@ def tdsc():
 
         D = tensor_dl(X_p_hat, B, params.r)
 
-    time_e = time.time()
+        B = tensor_tsta(X_p, D, B)
+        X_p_ = tensor_product(D, '', B, '')
+        X_ = block_3d_tensor(X_p_, size_X)
+        plt.imshow(X_[:,:,1])
+        plt.show()
 
-    X_p_ = tensor_product(D, '', B, '')
-    X_ = block_3d_tensor(X_p_, size_X)
+    time_e = time.time()
     print('Total time:', time_e - time_s, 's')
     print(X[:,:,1])
 
-    img = X_[:,:,1] * 255
-    plt.imshow(img)
-    plt.show()
+    #X_p_ = tensor_product(D, '', B, '')
+    #X_ = block_3d_tensor(X_p_, size_X)
+
+    #img = X_[:,:,1]
+    #plt.imshow(img)
+    #plt.show()
 
 
 if __name__ == '__main__':
