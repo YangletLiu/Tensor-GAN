@@ -26,7 +26,7 @@ def tensor_dl(X_hat, B, r):
     bnds = tuple([0, None] for _ in range(len(dual_lambda)))
     fun = lambda x: fobj_dict_dual(x, XB_t, BB_t, k)
 
-    res = minimize(fun, dual_lambda, method='L-BFGS-B', bounds=bnds)
+    res = minimize(fun, dual_lambda, method='Nelder-Mead', bounds=bnds)
 
     LAMBDA = np.diag(res.x)
     D_hat = np.zeros([m, r, k])
