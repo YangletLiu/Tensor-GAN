@@ -34,6 +34,6 @@ def tensor_product(A, ch1, B, ch2):
         for k in range(dim[2]):
             C_hat[:,:,k] = np.matmul(A_hat[:,:,k], B_hat[:,:,k])
 
-    C = np.fft.ifft(C_hat, axis=-1)
+    C = np.real(np.fft.ifft(C_hat, axis=-1))
 
     return C
