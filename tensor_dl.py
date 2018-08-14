@@ -44,7 +44,7 @@ def tensor_dl(X_hat, B, r):
     return D
 
 def fobj_dict_dual(x, XB_t, BB_t, k):
-    m = np.shape(XB_t)[1]
+    m = np.shape(XB_t)[0]
     r = len(x)
     LAMBDA = np.diag(x)
 
