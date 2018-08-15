@@ -29,12 +29,15 @@ class TDSC(object):
 
         self.X_p_hat = tf.fft(tf.complex(self.X_p, tf.zeros([batch_size, n1, n2, n3])))
 
-        self.dl_loss = self.compute_tensor_dl_loss(self.X_p_hat, self.B, self.dual_lambda)
-        self.dl_opt = tf.contrib.opt.ScipyOptimizerInterface(self.dl_loss, method='L-BFGS-B')
+        self.dl_loss = self.tensor_dl(self.X_p_hat, self.B, self.dual_lambda)
+        self.dl_opt = tf.contrib.opt.ScipyOptimizerInterface(
+            self.dl_loss, method='L-BFGS-B', var_to_bounds=(0, np.infty))
 
 
 
-    def compute_tensor_dl_loss(self, X_p_hat, B, dual_lambda):
+
+
+    def tensor_dl(self, X_p_hat, B, dual_lambda):
         B_hat = tf.fft(tf.complex(B, tf.zeros([params.r, n2, n3])))
         m = n1
         k = n3
@@ -51,16 +54,21 @@ class TDSC(object):
         xb_hat_list = [tf.matmul(x_hat, tf.transpose(b_hat)) for (x_hat, b_hat)
                        in zip(x_hat_list, b_hat_list)]
 
+        lambda_mat = tf.diag(dual_lambda)
+
         if m > params.r:
-            f = sum([np.trace(tf.matmul(tf.matrix_inverse(bb_hat), tf.matmul(tf.transpose(xb_hat), xb_hat)))
+            f = sum([np.trace(tf.matmul(tf.matrix_inverse(bb_hat + lambda_mat), tf.matmul(tf.transpose(xb_hat), xb_hat)))
                     for (bb_hat, xb_hat) in zip(bb_hat_list, xb_hat_list)])
         else:
-            f = sum([np.trace(tf.matmul(tf.matmul(xb_hat, tf.matrix_inverse(bb_hat)), tf.transpose(xb_hat)))
+            f = sum([np.trace(tf.matmul(tf.matmul(xb_hat, tf.matrix_inverse(bb_hat + lambda_mat)), tf.transpose(xb_hat)))
                      for (bb_hat, xb_hat) in zip(bb_hat_list, xb_hat_list)])
+
+        D = tf.concat([tf.expand_dims])
 
         return tf.real(f)
 
+    def compute_tensor_dict(self, X_p_hat, B, dual_lambda):
 
 
-        lambda_matrix = tf.diag(dual_lambda)
+
         tf.trace(tf.matmul())
