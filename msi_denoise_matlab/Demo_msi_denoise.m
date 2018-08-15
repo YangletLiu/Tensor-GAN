@@ -24,7 +24,7 @@ Omsi = normalized(Smsi); % scale the original msi to [0,1]
 msi_sz = size(Omsi);
 %% add Gaussian noise
 noisy_msi = Omsi + sigma * randn(msi_sz); % add Gaussian noise
-noisy_msi = Omsi
+
 i = 1;
 Re_msi{i} = noisy_msi;
 [psnr(i), ssim(i), fsim(i), ergas(i)] = MSIQA(Omsi*255, Re_msi{i}*255); % noisy level 
