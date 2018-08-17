@@ -6,6 +6,7 @@
 import numpy as np
 from hyper_params import HyperParams as params
 
+
 def tensor_block_3d(X):
     size = np.shape(X)
     psize = params.patch_size
@@ -23,6 +24,7 @@ def tensor_block_3d(X):
     X_p = np.transpose(np.reshape(Z, [psize**2, psize, total_patch_num]), [0,2,1])
 
     return X_p
+
 
 def block_3d_tensor(X_p, size):
     psize = params.patch_size

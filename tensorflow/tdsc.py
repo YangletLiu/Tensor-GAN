@@ -3,20 +3,13 @@
 # Author: miaoyin
 # Time: 2018/8/14 20:19
 
-
 import tensorflow as tf
 import numpy as np
+import scipy.io as sio
+import matplotlib.pyplot as plt
+
+from block_3d import *
 from hyper_params import HyperParams as params
-
-
-def init_D(patch_size, r):
-    D_mat = np.random.rand(patch_size ** 3, r) * 2 - 1
-    D_mat_1 = np.sqrt(np.sum(np.square(D_mat), axis=0))
-    for i in range(D_mat_1.shape[0]):
-        D_mat[:, i] /= D_mat_1[i]
-    D = np.transpose(np.reshape(
-        D_mat, [patch_size ** 2, patch_size, params.r]), [0, 2, 1])
-    return D
 
 
 class TDSC(object):
@@ -28,12 +21,15 @@ class TDSC(object):
         self.m = m
         self.n = n
         self.k = k
-        self.X_p = tf.placeholder(tf.float32, [batch_size, m, n, k])
-        self.D = tf.Variable(init_D(params.patch_size, params.r), dtype=tf.float32)
+        self.batch_size = batch_size
+        # self.X_p = tf.placeholder(tf.float32, [batch_size, m, n, k])
+        self.X_p = tf.placeholder(tf.float32, [m, n, k])
+        self.D = tf.Variable(self.init_D(params.patch_size, params.r), dtype=tf.float32)
         self.B = tf.Variable(np.zeros([params.r, n, k]), dtype=tf.float32)
-        self.dual_lambda = tf.Variable(tf.float32, [params.r, 1])
+        self.dual_lambda = tf.Variable(np.random.rand(params.r), dtype=tf.float32)
 
-        self.X_p_hat = tf.fft(tf.complex(self.X_p, tf.zeros([batch_size, m, n, nk])))
+        # self.X_p_hat = tf.fft(tf.complex(self.X_p, tf.zeros([batch_size, m, n, k])))
+        self.X_p_hat = tf.fft(tf.complex(self.X_p, tf.zeros([m, n, k])))
 
         self.B_assign = self.tensor_tsta(self.X_p, self.D, self.B)
 
@@ -41,10 +37,10 @@ class TDSC(object):
         self.dl_opt = tf.contrib.opt.ScipyOptimizerInterface(
             self.dl_loss, method='L-BFGS-B', var_to_bounds=(0, np.infty))
 
-
+        self.X_p_recon = self.tensor_product(self.D, '', self.B, '')
 
     def tensor_dl(self, X_p_hat, B, dual_lambda):
-        B_hat = tf.fft(tf.complex(B, tf.zeros([params.r, n, k])))
+        B_hat = tf.fft(tf.complex(B, tf.zeros([params.r, self.n, self.k])))
         m = self.m
         k = self.k
         x_hat_list = [tf.squeeze(x) for x in tf.split(X_p_hat, k)]
@@ -132,13 +128,53 @@ class TDSC(object):
 
         return tf.ifft(S_hat)
 
+    def train(self, sess):
+        init = tf.global_variables_initializer()
+        sess.run(init)
+
+        for i in range(params.sc_max_iter):
+            # compute tensor coefficients B
+            sess.run(self.B_assign)
+
+            # compute tensor dictionary D
+            self.dl_opt.minimize(sess)
+            sess.run(self.D_assign)
+
+
+
+    @staticmethod
+    def init_D(patch_size, r):
+        D_mat = np.random.rand(patch_size ** 3, r) * 2 - 1
+        D_mat_1 = np.sqrt(np.sum(np.square(D_mat), axis=0))
+        for i in range(D_mat_1.shape[0]):
+            D_mat[:, i] /= D_mat_1[i]
+        D = np.transpose(np.reshape(
+            D_mat, [patch_size ** 2, patch_size, params.r]), [0, 2, 1])
+        return D
+
+
+if __name__ == '__main__':
+    X = sio.loadmat('../samples/baloons_101_101_31.mat')['Omsi']
+    # plt.imshow(X[:,:,1])
+    # plt.show()
+
+    X_p = tensor_block_3d(X)
+    m, n, k = np.shape(X_p)
+
+    tdsc = TDSC(m, n, k, 1)
+
+    with tf.Session() as sess:
+        tdsc.train(sess)
+
+        X_p_recon = sess.run(tdsc.X_p_recon)
+        X_recon = block_3d_tensor(X_p_recon, np.shape(X))
+
+        # plt.imshow(X_recon[:,:,1])
+        # plt.show()
 
 
 
 
 
 
-
-
-        return A
 

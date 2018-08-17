@@ -23,21 +23,19 @@ def tdsc():
     size_X_p = np.shape(X_p)
     X_p_hat = np.fft.fft(X_p, axis=-1)
 
-    D0 = init_3d_tensor(params.patch_size, params.r)
-    B0 = np.zeros([params.r, size_X_p[1], size_X_p[2]])
+    D = init_3d_tensor(params.patch_size, params.r)
+    B = np.zeros([params.r, size_X_p[1], size_X_p[2]])
 
     time_s = time.time()
 
     for i in range(params.sc_max_iter):
         print('Iteration: {} / {}'.format(i, params.sc_max_iter),)
-        if i == 0:
-            B = tensor_tsta(X_p, D0, B0)
-        else:
-            B = tensor_tsta(X_p, D, B)
 
+        B = tensor_tsta(X_p, D, B)
         D = tensor_dl(X_p_hat, B, params.r)
 
         B = tensor_tsta(X_p, D, B)
+
         X_p_ = tensor_product(D, '', B, '')
         X_ = block_3d_tensor(X_p_, size_X)
         plt.imshow(X_[:,:,1])
