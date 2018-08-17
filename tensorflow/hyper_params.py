@@ -1,3 +1,8 @@
+# -*- coding:utf-8 -*-
+#
+# Author: miaoyin
+# Time: 2018/8/14 20:19
+
 
 class HyperParams():
     patch_size = 5

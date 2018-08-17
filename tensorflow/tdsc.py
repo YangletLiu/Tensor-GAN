@@ -14,41 +14,47 @@ def init_D(patch_size, r):
     D_mat_1 = np.sqrt(np.sum(np.square(D_mat), axis=0))
     for i in range(D_mat_1.shape[0]):
         D_mat[:, i] /= D_mat_1[i]
-    D = np.transpose(np.reshape( \
+    D = np.transpose(np.reshape(
         D_mat, [patch_size ** 2, patch_size, params.r]), [0, 2, 1])
     return D
 
 
 class TDSC(object):
 
-    def __init__(self, n1, n2, n3, batch_size):
-        self.X_p = tf.placeholder(tf.float32, [batch_size, n1, n2, n3])
+    def __init__(self, m, n, k, batch_size):
+        # size of X: m x n x k
+        # size of D: m x r x k
+        # size of B: r x n x k
+        self.m = m
+        self.n = n
+        self.k = k
+        self.X_p = tf.placeholder(tf.float32, [batch_size, m, n, k])
         self.D = tf.Variable(init_D(params.patch_size, params.r), dtype=tf.float32)
-        self.B = tf.Variable(np.zeros([params.r, n2, n3]), dtype=tf.float32)
+        self.B = tf.Variable(np.zeros([params.r, n, k]), dtype=tf.float32)
         self.dual_lambda = tf.Variable(tf.float32, [params.r, 1])
 
-        self.X_p_hat = tf.fft(tf.complex(self.X_p, tf.zeros([batch_size, n1, n2, n3])))
+        self.X_p_hat = tf.fft(tf.complex(self.X_p, tf.zeros([batch_size, m, n, nk])))
 
-        self.dl_loss = self.tensor_dl(self.X_p_hat, self.B, self.dual_lambda)
+        self.B_assign = self.tensor_tsta(self.X_p, self.D, self.B)
+
+        self.dl_loss, self.D_assign = self.tensor_dl(self.X_p_hat, self.B, self.dual_lambda)
         self.dl_opt = tf.contrib.opt.ScipyOptimizerInterface(
             self.dl_loss, method='L-BFGS-B', var_to_bounds=(0, np.infty))
 
 
 
-
-
     def tensor_dl(self, X_p_hat, B, dual_lambda):
-        B_hat = tf.fft(tf.complex(B, tf.zeros([params.r, n2, n3])))
-        m = n1
-        k = n3
-        x_hat_list = [tf.squeeze(t) for t in tf.split(X_p_hat, k)]
-        b_hat_list = [tf.squeeze(t) for t in tf.split(B_hat, k)]
+        B_hat = tf.fft(tf.complex(B, tf.zeros([params.r, n, k])))
+        m = self.m
+        k = self.k
+        x_hat_list = [tf.squeeze(x) for x in tf.split(X_p_hat, k)]
+        b_hat_list = [tf.squeeze(b) for b in tf.split(B_hat, k)]
 
-        BB_t = tf.concat([tf.expand_dims(tf.matmul(b_hat, tf.transepos(b_hat)), axis=-1) \
-                          for b_hat in b_hat_list], axis=-1)
-
-        XB_t = tf.concat([tf.expand_dims(tf.matmul(x_hat, tf.transepos(b_hat)), axis=-1) \
-                          for (x_hat, b_hat) in zip(x_hat_list, b_hat_list)], axis=-1)
+        # BB_t = tf.concat([tf.expand_dims(tf.matmul(b_hat, tf.transepos(b_hat)), axis=-1)
+        #                   for b_hat in b_hat_list], axis=-1)
+        #
+        # XB_t = tf.concat([tf.expand_dims(tf.matmul(x_hat, tf.transepos(b_hat)), axis=-1)
+        #                   for (x_hat, b_hat) in zip(x_hat_list, b_hat_list)], axis=-1)
 
         bb_hat_list = [tf.matmul(b_hat, tf.transpose(b_hat)) for b_hat in b_hat_list]
         xb_hat_list = [tf.matmul(x_hat, tf.transpose(b_hat)) for (x_hat, b_hat)
@@ -57,18 +63,82 @@ class TDSC(object):
         lambda_mat = tf.diag(dual_lambda)
 
         if m > params.r:
-            f = sum([np.trace(tf.matmul(tf.matrix_inverse(bb_hat + lambda_mat), tf.matmul(tf.transpose(xb_hat), xb_hat)))
+            f = sum([np.trace(tf.matmul(tf.matrix_inverse(bb_hat + lambda_mat),
+                                        tf.matmul(tf.transpose(xb_hat), xb_hat)))
                     for (bb_hat, xb_hat) in zip(bb_hat_list, xb_hat_list)])
         else:
-            f = sum([np.trace(tf.matmul(tf.matmul(xb_hat, tf.matrix_inverse(bb_hat + lambda_mat)), tf.transpose(xb_hat)))
+            f = sum([np.trace(tf.matmul(tf.matmul(xb_hat, tf.matrix_inverse(bb_hat + lambda_mat)),
+                                        tf.transpose(xb_hat)))
                      for (bb_hat, xb_hat) in zip(bb_hat_list, xb_hat_list)])
 
-        D = tf.concat([tf.expand_dims])
+        D_hat = tf.concat([tf.expand_dims(tf.transpose(tf.matmul(tf.matrix_inverse(bb_hat + lambda_mat),
+                                                                 tf.transpose(xb_hat))), axis=-1)
+                           for (bb_hat, xb_hat) in zip(bb_hat_list, xb_hat_list)], axis=-1)
 
-        return tf.real(f)
+        D_ = tf.ifft(D_hat)
+        D_assign = tf.assign(self.D, D_)
 
-    def compute_tensor_dict(self, X_p_hat, B, dual_lambda):
+        return tf.real(f), D_assign
+
+    def tensor_tsta(self, X_p, D, B):
+        B0 = B
+
+        DD = self.tensor_product(D, 't', D, '')
+        # DD_cmat = blk_circ_mat(DD)
+        # l0 = tf.norm(DD_cmat, 2)
+        l0 = tf.norm(DD, 2)
+        DX = self.tensor_product(D, 't', X, '')
+
+        C1 = B0
+        t1 = 1
+
+        for i in range(params.tsta_max_iter):
+            l1 = params.eta ** i * l0
+            grad_C1 = self.tensor_product(DD, 't', C1, '') - DX
+            temp = C1 - grad_C1 / l1  #tf.divide(x, y) ?
+            B1 = tf.multiply(tf.sign(temp), tf.maximum(tf.abs(temp) - params.beta / l1, 0))
+            t2 = (1 + np.sqrt(1 + 4 * t1 ** 2)) / 2
+            C1 = B1 + tf.scalar_mul((t1 - 1) / t2, (B1 - B0))
+            B0 = B1
+            t1 = t2
+
+        B_assign = tf.assign(self.B, B1)
+
+        return B_assign
+
+    def tensor_product(self, P, ch1, Q, ch2):
+        P_hat = tf.fft(P)
+        Q_hat = tf.fft(Q)
+        p_hat_list = [tf.squeeze(p) for p in tf.split(P_hat, self.k)]
+        q_hat_list = [tf.squeeze(q) for q in tf.split(Q_hat, self.k)]
+
+        # x_hat_list = [tf.squeeze(t) for t in tf.split(X_p_hat, k)]
+
+        # XB_t = tf.concat([tf.expand_dims(tf.matmul(x_hat, tf.transepos(b_hat)), axis=-1)
+        #                   for (x_hat, b_hat) in zip(x_hat_list, b_hat_list)], axis=-1)
+
+        if ch1 == 't' and ch2 == 't':
+            S_hat = tf.concat([tf.expand_dims(tf.matmul(tf.transpose(p_hat), tf.transpose(q_hat)))
+                               for (p_hat, q_hat) in zip(p_hat_list, q_hat_list)], axis=-1)
+        elif ch1 == 't':
+            S_hat = tf.concat([tf.expand_dims(tf.matmul(tf.transpose(p_hat), q_hat))
+                               for (p_hat, q_hat) in zip(p_hat_list, q_hat_list)], axis=-1)
+        elif ch2 == 't':
+            S_hat = tf.concat([tf.expand_dims(tf.matmul(p_hat, tf.transpose(q_hat)))
+                               for (p_hat, q_hat) in zip(p_hat_list, q_hat_list)], axis=-1)
+        else:
+            S_hat = tf.concat([tf.expand_dims(tf.matmul(p_hat, q_hat))
+                               for (p_hat, q_hat) in zip(p_hat_list, q_hat_list)], axis=-1)
+
+        return tf.ifft(S_hat)
 
 
 
-        tf.trace(tf.matmul())
+
+
+
+
+
+
+        return A
+
