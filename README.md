@@ -8,6 +8,4 @@ The default sample is in the folder `./samples`, which is a `101*101*31` pixel p
 The result of default sample is as follow, where the parameters are set in file `hyper_params.py`:
  ![image](https://github.com/hust512/Tensor-GAN/blob/master/baloon_sc_result.png)
  
-The matlab codes are in the folder `msi_denoise_matlab`.
-
-Also, we are re-implementing sparse coding in TensorFlow
+The version of Tensorflow has been implemented, whose codes are in the folder `./tensorflow`. Please run `train.py` to start. Then the reconstructions by tensor sparses will be saved in `./tensorflow/out/`.
