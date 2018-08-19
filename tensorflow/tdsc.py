@@ -15,7 +15,7 @@ from hyper_params import HyperParams as params
 
 class TDSC(object):
 
-    def __init__(self, m, n, k, batch_size):
+    def __init__(self, m, n, k, batch_size, D0):
         # size of X: m x n x k
         # size of D: m x r x k
         # size of B: r x n x k
@@ -24,10 +24,11 @@ class TDSC(object):
         self.k = k
         self.batch_size = batch_size
         # self.X_p = tf.placeholder(tf.float32, [batch_size, m, n, k])
-        self.X_p = tf.placeholder(tf.float32, [m, n, k])
-        self.D = tf.Variable(self.init_D(params.patch_size, params.r), dtype=tf.float32)
-        self.B = tf.Variable(np.zeros([params.r, n, k]), dtype=tf.float32)
-        self.dual_lambda = tf.Variable(np.random.rand(params.r), dtype=tf.float32)
+        self.X_p = tf.placeholder(tf.float64, [m, n, k])
+        # self.D = tf.Variable(self.init_D(params.patch_size, params.r), dtype=tf.float64)
+        self.D = tf.Variable(D0, dtype=tf.float64)
+        self.B = tf.Variable(np.zeros([params.r, n, k]), dtype=tf.float64)
+        self.dual_lambda = tf.Variable(np.random.rand(params.r), dtype=tf.float64)
 
         # self.X_p_complex = tf.complex(self.X_p, tf.zeros([m, n, k]))
         # self.D_complex = tf.complex(self.D, tf.zeros([m, params.r, k]))
@@ -39,14 +40,15 @@ class TDSC(object):
         # tensor dictionry learning
         self.dl_loss, self.D_assign = self.tensor_dl(self.X_p, self.B, self.dual_lambda)
         self.dl_opt = tf.contrib.opt.ScipyOptimizerInterface(
-            self.dl_loss, method='L-BFGS-B', var_to_bounds=(0, np.infty))
+            self.dl_loss, method='L-BFGS-B', var_to_bounds={self.dual_lambda:(0, np.infty)})
 
         # X reconstruction
+        self.B_assign = self.tensor_tsta(self.X_p, self.D, self.B)
         self.X_p_recon = self.tensor_product(self.D, '', self.B, '')
 
     def tensor_dl(self, X_p, B, dual_lambda):
-        X_p_hat = tf.fft(tf.complex(X_p, tf.zeros(tf.shape(X_p))))
-        B_hat = tf.fft(tf.complex(B, tf.zeros(tf.shape(B))))
+        X_p_hat = tf.fft(tf.complex(X_p, tf.zeros(tf.shape(X_p), dtype=tf.float64)))
+        B_hat = tf.fft(tf.complex(B, tf.zeros(tf.shape(B), dtype=tf.float64)))
         x_hat_list = [tf.squeeze(x) for x in tf.split(X_p_hat, self.k, axis=-1)]
         b_hat_list = [tf.squeeze(b) for b in tf.split(B_hat, self.k, axis=-1)]
 
@@ -61,7 +63,7 @@ class TDSC(object):
                        in zip(x_hat_list, b_hat_list)]
 
         lambda_diag = tf.matrix_diag(dual_lambda)
-        lambda_mat = tf.complex(lambda_diag, tf.zeros(tf.shape(lambda_diag)))
+        lambda_mat = tf.complex(lambda_diag, tf.zeros(tf.shape(lambda_diag), dtype=tf.float64))
 
         if self.m > params.r:
             f = sum([tf.trace(tf.matmul(self.pinv(bb_hat + lambda_mat),
@@ -77,8 +79,7 @@ class TDSC(object):
                            for (bb_hat, xb_hat) in zip(bb_hat_list, xb_hat_list)], axis=-1)
 
         D_ = tf.real(tf.ifft(D_hat))
-        D_assign = tf.assign(self.D, D_)
-
+        D_assign = tf.assign(self.D, tf.where(tf.is_nan(D_), tf.zeros_like(D_), D_))
         return tf.real(f), D_assign
 
     def tensor_tsta(self, X_p, D, B):
@@ -108,8 +109,8 @@ class TDSC(object):
         return B_assign
 
     def tensor_product(self, P, ch1, Q, ch2):
-        P_hat = tf.fft(tf.complex(P, tf.zeros(tf.shape(P))))
-        Q_hat = tf.fft(tf.complex(Q, tf.zeros(tf.shape(Q))))
+        P_hat = tf.fft(tf.complex(P, tf.zeros(tf.shape(P), dtype=tf.float64)))
+        Q_hat = tf.fft(tf.complex(Q, tf.zeros(tf.shape(Q), dtype=tf.float64)))
         p_hat_list = [tf.squeeze(p) for p in tf.split(P_hat, self.k, axis=-1)]
         q_hat_list = [tf.squeeze(q) for q in tf.split(Q_hat, self.k, axis=-1)]
 
@@ -146,7 +147,19 @@ class TDSC(object):
 
     @staticmethod
     def pinv(a):
-        return tf.py_func(np.linalg.pinv, [a], tf.complex64)
+        return tf.py_func(np.linalg.pinv, [a], tf.complex128)
+
+    @staticmethod
+    def fft(a):
+        def np_fft(a):
+            return np.fft.fft(a, axis=-1)
+        return tf.py_func(np_fft, [a], tf.complex128)
+
+    @staticmethod
+    def ifft(a):
+        def np_ifft(a):
+            return np.fft.ifft(a, axis=-1)
+        return tf.py_func(np_ifft, [a], tf.complex128)
 
     @staticmethod
     def init_D(patch_size, r):
@@ -158,16 +171,30 @@ class TDSC(object):
             D_mat, [patch_size ** 2, patch_size, params.r]), [0, 2, 1])
         return D
 
+def save_img(img, file_name):
+    fig = plt.figure(figsize=(5, 15))
+    ax = fig.add_subplot(111)
+    plt.axis('off')
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    ax.set_aspect('equal')
+    plt.imshow(img, cmap='Greys_r')
+    plt.savefig(file_name, bbox_inches='tight')
+    plt.close(fig)
 
 if __name__ == '__main__':
     X = sio.loadmat('../samples/baloons_101_101_31.mat')['Omsi']
-    # plt.imshow(X[:,:,1])
-    # plt.show()
+    D0 = sio.loadmat('../samples/D0.mat')['D0']
+
+    if not os.path.exists('./out/'):
+        os.mkdir('./out/')
+
+    save_img(X[:,:,2], './out/origin.png')
 
     X_p = tensor_block_3d(X)
     m, n, k = np.shape(X_p)
 
-    tdsc = TDSC(m, n, k, 1)
+    tdsc = TDSC(m, n, k, 1, D0)
 
     init = tf.global_variables_initializer()
     with tf.Session() as sess:
@@ -176,6 +203,7 @@ if __name__ == '__main__':
         for i in range(params.sc_max_iter):
             time_s = time.time()
             print('Iteration: {} / {}'.format(i, params.sc_max_iter),)
+
             # compute tensor coefficients B
             sess.run(tdsc.B_assign, feed_dict={tdsc.X_p:X_p})
 
@@ -187,6 +215,9 @@ if __name__ == '__main__':
             sess.run(tdsc.B_assign, feed_dict={tdsc.X_p:X_p})
             X_p_recon = sess.run(tdsc.X_p_recon)
             X_recon = block_3d_tensor(X_p_recon, np.shape(X))
+
+            save_img(X_recon[:, :, 2], './out/{}.png'.format(str(i).zfill(3)))
+
             time_e = time.time()
             print('time:', time_e - time_s, 's')
 
