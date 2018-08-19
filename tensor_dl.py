@@ -38,7 +38,7 @@ def tensor_dl(X_hat, B, r):
         D_hat[:, :, kk] = np.transpose(D_hat_k_t)
 
     D = np.fft.ifft(D_hat, axis=-1)
-    D[np.where(D == None)] = 0
+    D[np.where(np.isnan(D) == True)] = 0
     D = np.real(D)
 
     return D

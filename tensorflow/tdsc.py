@@ -134,15 +134,19 @@ class TDSC(object):
         return tf.real(tf.ifft(S_hat))
 
     @staticmethod
-    def pinv(a, rcond=1e-15):
+    def pinv_svd(a, rcond=1e-15):
         s, u, v = tf.svd(a)
         # Ignore singular values close to zero to prevent numerical overflow
         limit = rcond * tf.reduce_max(s)
         non_zero = tf.greater(s, limit)
 
         reciprocal = tf.where(non_zero, tf.reciprocal(s), tf.zeros(s.shape))
-        lhs = tf.matmul(v, tf.matrix_diag(reciprocal))
+        lhs = tf.matmul(v, tf.complex(tf.matrix_diag(reciprocal), tf.zeros(tf.shape(tf.matrix_diag(reciprocal)))))
         return tf.matmul(lhs, u, transpose_b=True)
+
+    @staticmethod
+    def pinv(a):
+        return tf.py_func(np.linalg.pinv, [a], tf.complex64)
 
     @staticmethod
     def init_D(patch_size, r):
