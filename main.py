@@ -26,16 +26,16 @@ def save_img(img, file_name):
     plt.savefig(file_name, bbox_inches='tight')
     plt.close(fig)
 
-def tdsc():
-    X = sio.loadmat('samples/baloons_101_101_31.mat')['Omsi']
+
+def tdsc(X):
     size_X = np.shape(X)
 
     X_p = tensor_block_3d(X)
     size_X_p = np.shape(X_p)
     X_p_hat = np.fft.fft(X_p, axis=-1)
 
-    #D = init_3d_tensor(params.patch_size, params.r)
-    D = sio.loadmat('./samples/D0.mat')['D0']
+    D = init_D(params.patch_size, params.r)
+    # D = sio.loadmat('./samples/D0.mat')['D0']
     B = np.zeros([params.r, size_X_p[1], size_X_p[2]])
 
     if not os.path.exists('./out/'):
@@ -68,5 +68,5 @@ def tdsc():
 
 
 if __name__ == '__main__':
-    #tensor = sio.loadmat('samples/baloons_101_101_31.mat')['Omsi']
-    tdsc()
+    X = sio.loadmat('samples/baloons_101_101_31.mat')['Omsi']
+    tdsc(X)

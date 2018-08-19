@@ -46,17 +46,24 @@ def blk_circ_mat(A):
     dim[0] = sz_A[0] * sz_A[2]
     dim[1] = sz_A[1] * sz_A[2]
     A_c = np.zeros(dim)
-    A_mat = np.reshape(np.transpose(A, [0, 2, 1]), [dim[0], sz_A[1]])
-    A_c[:,:sz_A[1]] = A_mat
+    A_mat = np.reshape(np.transpose(A, [0, 2, 1]), [dim[0], sz_A[1]], order='F')
     for k in range(sz_A[2]):
         A_c[:,k*sz_A[1]:(k+1)*sz_A[1]] = np.roll(A_mat, k*sz_A[0], axis=0)
 
     return A_c
 
 if __name__ == '__main__':
-    s = np.random.rand(4,4)
-    X = np.random.rand(4,3,2)
-    D = np.random.rand(4,2,2)
-    B0 = np.zeros([2,3,2])
-    tensor_tsta(X,D,B0)
+    # s = np.random.rand(4,4)
+    # X = np.random.rand(4,3,2)
+    # D = np.random.rand(4,2,2)
+    # B0 = np.zeros([2,3,2])
+    # tensor_tsta(X,D,B0)
+    import scipy.io as sio
+    D0 = sio.loadmat('./samples/D0.mat')['D0']
+    print(blk_circ_mat(D0).shape)
+    D0_c = blk_circ_mat(D0)
+    print(D0_c[100,:])
+    print(np.linalg.norm(D0_c, 2))
+
+
 

@@ -23,7 +23,7 @@ def tensor_dl(X_hat, B, r):
         BB_t[:, :, kk] = np.matmul(b_hat_k, b_hat_k.T)
         XB_t[:, :, kk] = np.matmul(x_hat_k, b_hat_k.T)
 
-    bnds = tuple([0, None] for _ in range(len(dual_lambda)))
+    bnds = tuple((0, np.infty) for _ in range(len(dual_lambda)))
     fun = lambda x: fobj_dict_dual(x, XB_t, BB_t, k)
 
     res = minimize(fun, dual_lambda, method='L-BFGS-B', bounds=bnds)
@@ -42,6 +42,7 @@ def tensor_dl(X_hat, B, r):
     D = np.real(D)
 
     return D
+
 
 def fobj_dict_dual(x, XB_t, BB_t, k):
     m = np.shape(XB_t)[0]
