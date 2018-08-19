@@ -13,8 +13,8 @@ def tensor_dl(X_hat, B, r):
     dual_lambda = 10 * np.abs(np.random.rand(r, 1))
     m, _, k = np.shape(X_hat)
 
-    BB_t = np.zeros([r, r, k])
-    XB_t = np.zeros([m, r, k])
+    BB_t = np.zeros([r, r, k], dtype=complex)
+    XB_t = np.zeros([m, r, k], dtype=complex)
 
     for kk in range(k):
         x_hat_k = X_hat[:, :, kk]
@@ -23,13 +23,13 @@ def tensor_dl(X_hat, B, r):
         BB_t[:, :, kk] = np.matmul(b_hat_k, b_hat_k.T)
         XB_t[:, :, kk] = np.matmul(x_hat_k, b_hat_k.T)
 
-    bnds = tuple([0, None] for _ in range(len(dual_lambda)))
+    bnds = tuple((0, np.infty) for _ in range(len(dual_lambda)))
     fun = lambda x: fobj_dict_dual(x, XB_t, BB_t, k)
 
     res = minimize(fun, dual_lambda, method='L-BFGS-B', bounds=bnds)
 
     LAMBDA = np.diag(res.x)
-    D_hat = np.zeros([m, r, k])
+    D_hat = np.zeros([m, r, k], dtype=complex)
 
     for kk in range(k):
         BB_t_k = np.squeeze(BB_t[:, :, kk])

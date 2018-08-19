@@ -26,10 +26,10 @@ def tdsc():
     D = init_3d_tensor(params.patch_size, params.r)
     B = np.zeros([params.r, size_X_p[1], size_X_p[2]])
 
-    time_s = time.time()
 
     for i in range(params.sc_max_iter):
-        print('Iteration: {} / {}'.format(i, params.sc_max_iter),)
+        time_s = time.time()
+        print('Iteration: {} / {}'.format(i, params.sc_max_iter))
 
         B = tensor_tsta(X_p, D, B)
         D = tensor_dl(X_p_hat, B, params.r)
@@ -41,9 +41,8 @@ def tdsc():
         plt.imshow(X_[:,:,1])
         plt.show()
 
-    time_e = time.time()
-    print('Total time:', time_e - time_s, 's')
-    print(X[:,:,1])
+        time_e = time.time()
+        print('time:', time_e - time_s, 's')
 
     #X_p_ = tensor_product(D, '', B, '')
     #X_ = block_3d_tensor(X_p_, size_X)

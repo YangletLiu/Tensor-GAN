@@ -7,6 +7,7 @@ import tensorflow as tf
 import numpy as np
 import scipy.io as sio
 import matplotlib.pyplot as plt
+import time
 
 from block_3d import *
 from hyper_params import HyperParams as params
@@ -59,19 +60,19 @@ class TDSC(object):
         xb_hat_list = [tf.matmul(x_hat, tf.transpose(b_hat)) for (x_hat, b_hat)
                        in zip(x_hat_list, b_hat_list)]
 
-        lambda_diag = tf.diag(dual_lambda)
+        lambda_diag = tf.matrix_diag(dual_lambda)
         lambda_mat = tf.complex(lambda_diag, tf.zeros(tf.shape(lambda_diag)))
 
         if self.m > params.r:
-            f = sum([tf.trace(tf.matmul(tf.matrix_inverse(bb_hat + lambda_mat),
+            f = sum([tf.trace(tf.matmul(self.pinv(bb_hat + lambda_mat),
                                         tf.matmul(tf.transpose(xb_hat), xb_hat)))
                     for (bb_hat, xb_hat) in zip(bb_hat_list, xb_hat_list)])
         else:
-            f = sum([tf.trace(tf.matmul(tf.matmul(xb_hat, tf.matrix_inverse(bb_hat + lambda_mat)),
+            f = sum([tf.trace(tf.matmul(tf.matmul(xb_hat, self.pinv(bb_hat + lambda_mat)),
                                         tf.transpose(xb_hat)))
                      for (bb_hat, xb_hat) in zip(bb_hat_list, xb_hat_list)])
 
-        D_hat = tf.concat([tf.expand_dims(tf.transpose(tf.matmul(tf.matrix_inverse(bb_hat + lambda_mat),
+        D_hat = tf.concat([tf.expand_dims(tf.transpose(tf.matmul(self.pinv(bb_hat + lambda_mat),
                                                                  tf.transpose(xb_hat))), axis=-1)
                            for (bb_hat, xb_hat) in zip(bb_hat_list, xb_hat_list)], axis=-1)
 
@@ -133,6 +134,17 @@ class TDSC(object):
         return tf.real(tf.ifft(S_hat))
 
     @staticmethod
+    def pinv(a, rcond=1e-15):
+        s, u, v = tf.svd(a)
+        # Ignore singular values close to zero to prevent numerical overflow
+        limit = rcond * tf.reduce_max(s)
+        non_zero = tf.greater(s, limit)
+
+        reciprocal = tf.where(non_zero, tf.reciprocal(s), tf.zeros(s.shape))
+        lhs = tf.matmul(v, tf.matrix_diag(reciprocal))
+        return tf.matmul(lhs, u, transpose_b=True)
+
+    @staticmethod
     def init_D(patch_size, r):
         D_mat = np.random.rand(patch_size ** 3, r) * 2 - 1
         D_mat_1 = np.sqrt(np.sum(np.square(D_mat), axis=0))
@@ -158,6 +170,7 @@ if __name__ == '__main__':
         sess.run(init)
 
         for i in range(params.sc_max_iter):
+            time_s = time.time()
             print('Iteration: {} / {}'.format(i, params.sc_max_iter),)
             # compute tensor coefficients B
             sess.run(tdsc.B_assign, feed_dict={tdsc.X_p:X_p})
@@ -166,11 +179,15 @@ if __name__ == '__main__':
             tdsc.dl_opt.minimize(sess, feed_dict={tdsc.X_p:X_p})
             sess.run(tdsc.D_assign, feed_dict={tdsc.X_p:X_p})
 
-        X_p_recon = sess.run(tdsc.X_p_recon)
-        X_recon = block_3d_tensor(X_p_recon, np.shape(X))
+            # recover input tensor X
+            sess.run(tdsc.B_assign, feed_dict={tdsc.X_p:X_p})
+            X_p_recon = sess.run(tdsc.X_p_recon)
+            X_recon = block_3d_tensor(X_p_recon, np.shape(X))
+            time_e = time.time()
+            print('time:', time_e - time_s, 's')
 
-        # plt.imshow(X_recon[:,:,1])
-        # plt.show()
+            plt.imshow(X_recon[:,:,1])
+            plt.show()
 
 
 

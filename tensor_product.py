@@ -16,8 +16,7 @@ def tensor_product(A, ch1, B, ch2):
     else:
         dim[1] = sz_B[1]
 
-
-    C_hat = np.zeros(dim)
+    C_hat = np.zeros(dim, dtype=complex)
     A_hat = np.fft.fft(A, axis=-1)
     B_hat = np.fft.fft(B, axis=-1)
 
