@@ -9,6 +9,8 @@ import os
 import scipy.io as sio
 import matplotlib.pyplot as plt
 import time
+import sys
+sys.path.append('../')
 
 from tdsc import TDSC
 from block_3d import *
@@ -26,6 +28,7 @@ def save_img(img, file_name):
     plt.savefig(file_name, bbox_inches='tight')
     plt.close(fig)
 
+
 if __name__ == '__main__':
     X = sio.loadmat('../samples/baloons_101_101_31.mat')['Omsi']
     D0 = sio.loadmat('../samples/D0.mat')['D0']
@@ -38,7 +41,7 @@ if __name__ == '__main__':
     X_p = tensor_block_3d(X)
     m, n, k = np.shape(X_p)
 
-    tdsc = TDSC(m, n, k, 1, D0)
+    tdsc = TDSC(m, n, k)
 
     init = tf.global_variables_initializer()
     with tf.Session() as sess:
