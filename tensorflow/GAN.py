@@ -9,6 +9,7 @@ import sys
 import scipy.io as sio
 import os
 import keras
+from matplotlib import pyplot as plt
 
 
 class AAE(object):
@@ -69,22 +70,13 @@ class AAE(object):
 
         return keras.Model(z, d)
 
-    def train(self):
-        batch_size = 1
-        epochs = 10
-        (x_train, _), (_, _) = keras.datasets.mnist.load_data()
-
-        # x_train = (x_train.astype(np.float32)) - 127.5) / 127.5
-        # x_train = np.expand_dims(x_train, axis=3)
+    def train(self, batch_size, imgs, iter_num):
 
         real = np.ones([batch_size, 1])
         fake = np.ones([batch_size, 1])
 
-        sample = sio.loadmat('../samples/balloons_101_101_31.mat')['Omsi']
+        for i in range(iter_num):
 
-        for epoch in range(epochs):
-
-            imgs = np.expand_dims(sample, axis=0)
             latent_fake = self.encoder.predict(imgs)
             latent_real = np.random.normal(size=[batch_size, self.latent_dim])
 
@@ -96,12 +88,42 @@ class AAE(object):
 
             ae_loss = self.autoencoder.train_on_batch(imgs, imgs)
 
-            print('epoch {}: D loss: {}, G loss: {}, AutoEncoder loss: {}'.format(epoch, d_loss, g_loss, ae_loss))
+        return d_loss, g_loss, ae_loss
+
+    def sample_images(self, epoch):
+        r, c = 5, 5
+
+        z = np.random.normal(size=(r*c, self.latent_dim))
+        gen_imgs = self.decoder.predict(z)
+
+        gen_imgs = 0.5 * gen_imgs + 0.5
+
+        fig, axs = plt.subplots(r, c)
+        cnt = 0
+        for i in range(r):
+            for j in range(c):
+                axs[i,j].imshow(gen_imgs[cnt, :,:,0], cmap='gray')
+                axs[i,j].axis('off')
+                cnt += 1
+        fig.savefig("images/mnist_%d.png" % epoch)
+        plt.close()
 
 
 if __name__ == '__main__':
-    aae = AAE([101, 101, 31], [101, 101, 31], 256)
-    aae.train()
+    aae = AAE([28, 28, 1], [28, 28, 1], 256)
+    batch_size = 32
+    epochs = 64
+    (train_data, _), (_, _) = keras.datasets.mnist.load_data()
+    train_data = (train_data.astype(np.float32) - 127.5) / 127.5
+    train_data = np.expand_dims(train_data, axis=3)
+
+    for epoch in range(epochs):
+        indices = np.random.randint(0, train_data.shape[0], batch_size)
+        imgs = train_data[indices]
+        d_loss, g_loss, ae_loss = aae.train(batch_size, imgs, 1)
+        if epoch % 20 == 0:
+            print('epoch {}: D loss: {}, G loss: {}, AutoEncoder loss: {}'.format(epoch, d_loss, g_loss, ae_loss))
+            aae.sample_images(epoch)
 
 
 

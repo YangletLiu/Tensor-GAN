@@ -6,8 +6,10 @@
 import tensorflow as tf
 import numpy as np
 import sys
+import time
 sys.path.append('../')
 
+from matplotlib import pyplot as plt
 from block_3d import *
 from hyper_params import HyperParams as params
 
@@ -118,6 +120,28 @@ class TDSC(object):
 
         return tf.real(self.ifft(S_hat))
 
+    def train(self, sess, X_p):
+        for i in range(params.sc_max_iter):
+            time_start = time.time()
+            print('Iteration: {} / {}'.format(i, params.sc_max_iter),)
+
+            # compute tensor coefficients C
+            sess.run(self.C_assign, feed_dict={self.X_p:X_p})
+
+            # compute tensor dictionary D
+            self.dl_opt.minimize(sess, feed_dict={self.X_p:X_p})
+            sess.run(self.D_assign, feed_dict={self.X_p:X_p})
+
+            # recover input tensor X
+            sess.run(self.C_assign, feed_dict={self.X_p:X_p})
+            X_p_recon = sess.run(self.X_p_recon)
+            X_recon = block_3d_tensor(X_p_recon, np.shape(X))
+
+            self.save_img(X_recon[:, :, 2], './out/{}.png'.format(str(i).zfill(3)))
+
+            time_end = time.time()
+            print('time:', time_end - time_start, 's')
+
     @staticmethod
     def pinv_svd(a, rcond=1e-15):
         s, u, v = tf.svd(a)
@@ -168,5 +192,17 @@ class TDSC(object):
         D = np.transpose(np.reshape(
             D_mat, [patch_size ** 2, patch_size, params.r], order='F'), [0, 2, 1])
         return D
+
+    @staticmethod
+    def save_img(img, file_name):
+        fig = plt.figure(figsize=(5, 15))
+        ax = fig.add_subplot(111)
+        plt.axis('off')
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.set_aspect('equal')
+        plt.imshow(img, cmap='Greys_r')
+        plt.savefig(file_name, bbox_inches='tight')
+        plt.close(fig)
 
 

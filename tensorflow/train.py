@@ -29,10 +29,8 @@ def save_img(img, file_name):
     plt.close(fig)
 
 
-def train():
+if __name__ == '__main__':
     X = sio.loadmat('../samples/balloons_101_101_31.mat')['Omsi']
-    # D0 = sio.loadmat('../samples/D0.mat')['D0']
-
     if not os.path.exists('./out/'):
         os.mkdir('./out/')
 
@@ -40,40 +38,13 @@ def train():
 
     X_p = tensor_block_3d(X)
     m, n, k = np.shape(X_p)
-
     tdsc = TDSC(m, n, k)
 
+    sess = tf.Session()
     init = tf.global_variables_initializer()
-    with tf.Session() as sess:
-        sess.run(init)
+    sess.run(init)
 
-        for i in range(params.sc_max_iter):
-            time_start = time.time()
-            print('Iteration: {} / {}'.format(i, params.sc_max_iter),)
-
-            # compute tensor coefficients C
-            sess.run(tdsc.C_assign, feed_dict={tdsc.X_p:X_p})
-
-            # compute tensor dictionary D
-            tdsc.dl_opt.minimize(sess, feed_dict={tdsc.X_p:X_p})
-            sess.run(tdsc.D_assign, feed_dict={tdsc.X_p:X_p})
-
-            # recover input tensor X
-            sess.run(tdsc.C_assign, feed_dict={tdsc.X_p:X_p})
-            X_p_recon = sess.run(tdsc.X_p_recon)
-            X_recon = block_3d_tensor(X_p_recon, np.shape(X))
-
-            save_img(X_recon[:, :, 2], './out/{}.png'.format(str(i).zfill(3)))
-
-            time_end = time.time()
-            print('time:', time_end - time_start, 's')
-
-        # plt.imshow(X_recon[:,:,1])
-        # plt.show()
-
-
-if __name__ == '__main__':
-    train()
+    tdsc.train(sess, X_p)
 
 
 
