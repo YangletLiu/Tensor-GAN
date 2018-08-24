@@ -48,7 +48,7 @@ if __name__ == '__main__':
         sess.run(init)
 
         for i in range(params.sc_max_iter):
-            time_s = time.time()
+            time_start = time.time()
             print('Iteration: {} / {}'.format(i, params.sc_max_iter),)
 
             # compute tensor coefficients B
@@ -65,8 +65,8 @@ if __name__ == '__main__':
 
             save_img(X_recon[:, :, 2], './out/{}.png'.format(str(i).zfill(3)))
 
-            time_e = time.time()
-            print('time:', time_e - time_s, 's')
+            time_end = time.time()
+            print('time:', time_end - time_start, 's')
 
         # plt.imshow(X_recon[:,:,1])
         # plt.show()

@@ -44,7 +44,7 @@ def tdsc(X):
     save_img(X[:,:,2], './out/origin.png')
 
     for i in range(params.sc_max_iter):
-        time_s = time.time()
+        time_start = time.time()
         print('Iteration: {} / {}'.format(i, params.sc_max_iter))
 
         B = tensor_tsta(X_p, D, B)
@@ -56,8 +56,8 @@ def tdsc(X):
         X_ = block_3d_tensor(X_p_, size_X)
         save_img(X_[:,:,2], './out/{}.png'.format(str(i).zfill(3)))
 
-        time_e = time.time()
-        print('time:', time_e - time_s, 's')
+        time_end = time.time()
+        print('time:', time_end - time_start, 's')
 
     #X_p_ = tensor_product(D, '', B, '')
     #X_ = block_3d_tensor(X_p_, size_X)

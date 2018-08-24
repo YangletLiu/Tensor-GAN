@@ -80,27 +80,27 @@ class AAE(object):
         real = np.ones([batch_size, 1])
         fake = np.ones([batch_size, 1])
 
-        sample = sio.loadmat('../samples/balloons_101_101_31.mat')
+        sample = sio.loadmat('../samples/balloons_101_101_31.mat')['Omsi']
 
         for epoch in range(epochs):
 
-            imgs = sample
+            imgs = np.expand_dims(sample, axis=0)
             latent_fake = self.encoder.predict(imgs)
             latent_real = np.random.normal(size=[batch_size, self.latent_dim])
 
             d_loss_real = self.discriminator.train_on_batch(latent_real, real)
             d_loss_fake = self.discriminator.train_on_batch(latent_fake, fake)
-            d_loss = 0.5 * np.add(d_loss_fake + d_loss_real)
+            d_loss = 0.5 * np.add(d_loss_fake, d_loss_real)
 
             g_loss = self.generator.train_on_batch(imgs, real)
 
             ae_loss = self.autoencoder.train_on_batch(imgs, imgs)
 
-            print('{} epoch: D loss: {}, G loss: {}, AutoEncoder loss: {}', d_loss, g_loss, ae_loss)
+            print('{} epoch: D loss: {}, G loss: {}, AutoEncoder loss: {}'.format(epoch, d_loss, g_loss, ae_loss))
 
 
 if __name__ == '__main__':
-    aae = AAE([31, 31, 101], [31, 31, 101], 256)
+    aae = AAE([101, 101, 31], [101, 101, 31], 256)
     aae.train()
 
 
