@@ -30,7 +30,7 @@ def save_img(img, file_name):
 
 
 if __name__ == '__main__':
-    X = sio.loadmat('../samples/baloons_101_101_31.mat')['Omsi']
+    X = sio.loadmat('../samples/balloons_101_101_31.mat')['Omsi']
     D0 = sio.loadmat('../samples/D0.mat')['D0']
 
     if not os.path.exists('./out/'):

@@ -68,5 +68,5 @@ def tdsc(X):
 
 
 if __name__ == '__main__':
-    X = sio.loadmat('samples/baloons_101_101_31.mat')['Omsi']
+    X = sio.loadmat('samples/balloons_101_101_31.mat')['Omsi']
     tdsc(X)
