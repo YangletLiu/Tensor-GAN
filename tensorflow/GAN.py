@@ -96,7 +96,7 @@ class AAE(object):
 
             ae_loss = self.autoencoder.train_on_batch(imgs, imgs)
 
-            print('{} epoch: D loss: {}, G loss: {}, AutoEncoder loss: {}'.format(epoch, d_loss, g_loss, ae_loss))
+            print('epoch {}: D loss: {}, G loss: {}, AutoEncoder loss: {}'.format(epoch, d_loss, g_loss, ae_loss))
 
 
 if __name__ == '__main__':

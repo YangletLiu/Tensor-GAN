@@ -16,23 +16,23 @@ def tensor_product(A, ch1, B, ch2):
     else:
         dim[1] = sz_B[1]
 
-    C_hat = np.zeros(dim, dtype=complex)
+    S_hat = np.zeros(dim, dtype=complex)
     A_hat = np.fft.fft(A, axis=-1)
     B_hat = np.fft.fft(B, axis=-1)
 
     if ch1 == 't' and ch2 == 't':
         for k in range(dim[2]):
-            C_hat[:,:,k] = np.matmul(np.transpose(A_hat[:,:,k]), np.transpose(B_hat[:,:,k]))
+            S_hat[:,:,k] = np.matmul(np.transpose(A_hat[:,:,k]), np.transpose(B_hat[:,:,k]))
     elif ch1 == 't':
         for k in range(dim[2]):
-            C_hat[:,:,k] = np.matmul(np.transpose(A_hat[:,:,k]), B_hat[:,:,k])
+            S_hat[:,:,k] = np.matmul(np.transpose(A_hat[:,:,k]), B_hat[:,:,k])
     elif ch2 == 't':
         for k in range(dim[2]):
-            C_hat[:,:,k] = np.matmul(A_hat[:,:,k], np.transpose(B_hat[:,:,k]))
+            S_hat[:,:,k] = np.matmul(A_hat[:,:,k], np.transpose(B_hat[:,:,k]))
     else:
         for k in range(dim[2]):
-            C_hat[:,:,k] = np.matmul(A_hat[:,:,k], B_hat[:,:,k])
+            S_hat[:,:,k] = np.matmul(A_hat[:,:,k], B_hat[:,:,k])
 
-    C = np.real(np.fft.ifft(C_hat, axis=-1))
+    S = np.real(np.fft.ifft(S_hat, axis=-1))
 
-    return C
+    return S

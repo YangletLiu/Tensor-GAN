@@ -29,9 +29,9 @@ def save_img(img, file_name):
     plt.close(fig)
 
 
-if __name__ == '__main__':
+def train():
     X = sio.loadmat('../samples/balloons_101_101_31.mat')['Omsi']
-    D0 = sio.loadmat('../samples/D0.mat')['D0']
+    # D0 = sio.loadmat('../samples/D0.mat')['D0']
 
     if not os.path.exists('./out/'):
         os.mkdir('./out/')
@@ -51,15 +51,15 @@ if __name__ == '__main__':
             time_start = time.time()
             print('Iteration: {} / {}'.format(i, params.sc_max_iter),)
 
-            # compute tensor coefficients B
-            sess.run(tdsc.B_assign, feed_dict={tdsc.X_p:X_p})
+            # compute tensor coefficients C
+            sess.run(tdsc.C_assign, feed_dict={tdsc.X_p:X_p})
 
             # compute tensor dictionary D
             tdsc.dl_opt.minimize(sess, feed_dict={tdsc.X_p:X_p})
             sess.run(tdsc.D_assign, feed_dict={tdsc.X_p:X_p})
 
             # recover input tensor X
-            sess.run(tdsc.B_assign, feed_dict={tdsc.X_p:X_p})
+            sess.run(tdsc.C_assign, feed_dict={tdsc.X_p:X_p})
             X_p_recon = sess.run(tdsc.X_p_recon)
             X_recon = block_3d_tensor(X_p_recon, np.shape(X))
 
@@ -70,6 +70,10 @@ if __name__ == '__main__':
 
         # plt.imshow(X_recon[:,:,1])
         # plt.show()
+
+
+if __name__ == '__main__':
+    train()
 
 
 

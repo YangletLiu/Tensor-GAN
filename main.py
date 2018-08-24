@@ -36,7 +36,7 @@ def tdsc(X):
 
     D = init_D(params.patch_size, params.r)
     # D = sio.loadmat('./samples/D0.mat')['D0']
-    B = np.zeros([params.r, size_X_p[1], size_X_p[2]])
+    C = np.zeros([params.r, size_X_p[1], size_X_p[2]])
 
     if not os.path.exists('./out/'):
         os.mkdir('./out/')
@@ -47,12 +47,12 @@ def tdsc(X):
         time_start = time.time()
         print('Iteration: {} / {}'.format(i, params.sc_max_iter))
 
-        B = tensor_tsta(X_p, D, B)
-        D = tensor_dl(X_p_hat, B, params.r)
+        C = tensor_tsta(X_p, D, C)
+        D = tensor_dl(X_p_hat, C, params.r)
 
-        B = tensor_tsta(X_p, D, B)
+        C = tensor_tsta(X_p, D, C)
 
-        X_p_ = tensor_product(D, '', B, '')
+        X_p_ = tensor_product(D, '', C, '')
         X_ = block_3d_tensor(X_p_, size_X)
         save_img(X_[:,:,2], './out/{}.png'.format(str(i).zfill(3)))
 

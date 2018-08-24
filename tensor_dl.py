@@ -8,23 +8,23 @@ from hyper_params import HyperParams as params
 from scipy.optimize import minimize
 
 
-def tensor_dl(X_hat, B, r):
-    B_hat = np.fft.fft(B, axis=-1)  # mabe incorrect
+def tensor_dl(X_hat, C, r):
+    C_hat = np.fft.fft(C, axis=-1)  # mabe incorrect
     dual_lambda = 10 * np.abs(np.random.rand(r, 1))
     m, _, k = np.shape(X_hat)
 
-    BB_t = np.zeros([r, r, k], dtype=complex)
-    XB_t = np.zeros([m, r, k], dtype=complex)
+    CC_t = np.zeros([r, r, k], dtype=complex)
+    XC_t = np.zeros([m, r, k], dtype=complex)
 
     for kk in range(k):
         x_hat_k = X_hat[:, :, kk]
-        b_hat_k = B_hat[:, :, kk]
+        c_hat_k = C_hat[:, :, kk]
 
-        BB_t[:, :, kk] = np.matmul(b_hat_k, b_hat_k.T)
-        XB_t[:, :, kk] = np.matmul(x_hat_k, b_hat_k.T)
+        CC_t[:, :, kk] = np.matmul(c_hat_k, c_hat_k.T)
+        XC_t[:, :, kk] = np.matmul(x_hat_k, c_hat_k.T)
 
     bnds = tuple((0, np.infty) for _ in range(len(dual_lambda)))
-    fun = lambda x: fobj_dict_dual(x, XB_t, BB_t, k)
+    fun = lambda x: fobj_dict_dual(x, XC_t, CC_t, k)
 
     res = minimize(fun, dual_lambda, method='L-BFGS-B', bounds=bnds)
 
@@ -32,9 +32,9 @@ def tensor_dl(X_hat, B, r):
     D_hat = np.zeros([m, r, k], dtype=complex)
 
     for kk in range(k):
-        BB_t_k = np.squeeze(BB_t[:, :, kk])
-        XB_t_k = np.squeeze(XB_t[:, :, kk])
-        D_hat_k_t = np.matmul(np.linalg.pinv(BB_t_k + LAMBDA), XB_t_k.T)
+        CC_t_k = np.squeeze(CC_t[:, :, kk])
+        XC_t_k = np.squeeze(XC_t[:, :, kk])
+        D_hat_k_t = np.matmul(np.linalg.pinv(CC_t_k + LAMBDA), XC_t_k.T)
         D_hat[:, :, kk] = np.transpose(D_hat_k_t)
 
     D = np.fft.ifft(D_hat, axis=-1)
@@ -44,8 +44,8 @@ def tensor_dl(X_hat, B, r):
     return D
 
 
-def fobj_dict_dual(x, XB_t, BB_t, k):
-    m = np.shape(XB_t)[0]
+def fobj_dict_dual(x, XC_t, CC_t, k):
+    m = np.shape(XC_t)[0]
     r = len(x)
     LAMBDA = np.diag(x)
 
@@ -54,14 +54,14 @@ def fobj_dict_dual(x, XB_t, BB_t, k):
     # H = np.zeros([r, r])
 
     for kk in range(k):
-        XB_t_k = XB_t[:, :, kk]
-        BB_t_k = BB_t[:, :, kk]
-        BB_t_inv = np.linalg.pinv(BB_t_k + LAMBDA)
+        XC_t_k = XC_t[:, :, kk]
+        CC_t_k = CC_t[:, :, kk]
+        CC_t_inv = np.linalg.pinv(CC_t_k + LAMBDA)
 
         if m > r:
-            f += np.trace(np.matmul(BB_t_inv, np.matmul(XB_t_k.T, XB_t_k)))
+            f += np.trace(np.matmul(CC_t_inv, np.matmul(XC_t_k.T, XC_t_k)))
         else:
-            f += np.trace(np.matmul(np.matmul(XB_t_k, BB_t_inv), XB_t_k.T))
+            f += np.trace(np.matmul(np.matmul(XC_t_k, CC_t_inv), XC_t_k.T))
 
         f = np.real(f + k * np.sum(x))
 
@@ -70,7 +70,7 @@ def fobj_dict_dual(x, XB_t, BB_t, k):
 
 if __name__ == '__main__':
     X_hat = np.random.rand(4, 3, 2)
-    B = np.random.rand(2, 3, 2)
+    C = np.random.rand(2, 3, 2)
     n_basis = 2
-    D = tensor_dl(X_hat, B, n_basis)
+    D = tensor_dl(X_hat, C, n_basis)
     print(D)
