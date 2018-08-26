@@ -70,37 +70,36 @@ class AAE(object):
 
         return keras.Model(z, d)
 
-    def train(self, batch_size, imgs, iter_num):
+    def train(self, batch_size, x, y, iter_num):
 
         real = np.ones([batch_size, 1])
         fake = np.ones([batch_size, 1])
 
         for i in range(iter_num):
 
-            latent_fake = self.encoder.predict(imgs)
+            latent_fake = self.encoder.predict(x)
             latent_real = np.random.normal(size=[batch_size, self.latent_dim])
 
             d_loss_real = self.discriminator.train_on_batch(latent_real, real)
             d_loss_fake = self.discriminator.train_on_batch(latent_fake, fake)
             d_loss = 0.5 * np.add(d_loss_fake, d_loss_real)
 
-            g_loss = self.generator.train_on_batch(imgs, real)
+            g_loss = self.generator.train_on_batch(x, real)
 
-            ae_loss = self.autoencoder.train_on_batch(imgs, imgs)
+            ae_loss = self.autoencoder.train_on_batch(x, y)
 
         return d_loss, g_loss, ae_loss
 
-    def save_samples(self, samples, epoch):
+    def save_samples(self, samples, epoch, folder):
 
         gen_samples = self.autoencoder.predict(samples)
-
         gen_samples = 0.5 * gen_samples + 0.5
 
-        fig, axs = plt.subplots(2, samples.shape[0])
-        plt.subplots_adjust(wspace=0, hspace=0)  # 调整子图间距
+        fig = plt.figure(figsize=(samples.shape[0], 2))
+        axs = fig.subplots(2, samples.shape[0])
         for i in range(samples.shape[0]):
-            axs[0, i].imshow(samples[i,:,:,0], cmap='gray')
-            axs[1, i].imshow(gen_samples[i,:,:,0], cmap='gray')
+            axs[0, i].imshow(np.squeeze(samples[i]), cmap='gray')
+            axs[1, i].imshow(np.squeeze(gen_samples[i]), cmap='gray')
             axs[0, i].axis('off')
             axs[0, i].set_xticklabels([])
             axs[0, i].set_yticklabels([])
@@ -109,9 +108,9 @@ class AAE(object):
             axs[1, i].set_xticklabels([])
             axs[1, i].set_yticklabels([])
             axs[1, i].set_aspect('equal')
-        if not os.path.exists('./imgs/'):
-            os.mkdir('./imgs/')
-        fig.savefig("./imgs/mnist_%d.png" % epoch)
+        if not os.path.exists('./{}/'.format(folder)):
+            os.mkdir('./{}/'.format(folder))
+        fig.savefig("./{}/mnist_{}.png".format(folder, epoch), bbox_inches='tight')
         plt.close()
 
 
