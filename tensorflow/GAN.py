@@ -90,29 +90,35 @@ class AAE(object):
 
         return d_loss, g_loss, ae_loss
 
-    def sample_images(self, epoch):
-        r, c = 5, 5
+    def save_samples(self, samples, epoch):
 
-        z = np.random.normal(size=(r*c, self.latent_dim))
-        gen_imgs = self.decoder.predict(z)
+        gen_samples = self.autoencoder.predict(samples)
 
-        gen_imgs = 0.5 * gen_imgs + 0.5
+        gen_samples = 0.5 * gen_samples + 0.5
 
-        fig, axs = plt.subplots(r, c)
-        cnt = 0
-        for i in range(r):
-            for j in range(c):
-                axs[i,j].imshow(gen_imgs[cnt, :,:,0], cmap='gray')
-                axs[i,j].axis('off')
-                cnt += 1
-        fig.savefig("images/mnist_%d.png" % epoch)
+        fig, axs = plt.subplots(2, samples.shape[0])
+        plt.subplots_adjust(wspace=0, hspace=0)  # 调整子图间距
+        for i in range(samples.shape[0]):
+            axs[0, i].imshow(samples[i,:,:,0], cmap='gray')
+            axs[1, i].imshow(gen_samples[i,:,:,0], cmap='gray')
+            axs[0, i].axis('off')
+            axs[0, i].set_xticklabels([])
+            axs[0, i].set_yticklabels([])
+            axs[0, i].set_aspect('equal')
+            axs[1, i].axis('off')
+            axs[1, i].set_xticklabels([])
+            axs[1, i].set_yticklabels([])
+            axs[1, i].set_aspect('equal')
+        if not os.path.exists('./imgs/'):
+            os.mkdir('./imgs/')
+        fig.savefig("./imgs/mnist_%d.png" % epoch)
         plt.close()
 
 
 if __name__ == '__main__':
     aae = AAE([28, 28, 1], [28, 28, 1], 256)
     batch_size = 32
-    epochs = 64
+    epochs = 10000
     (train_data, _), (_, _) = keras.datasets.mnist.load_data()
     train_data = (train_data.astype(np.float32) - 127.5) / 127.5
     train_data = np.expand_dims(train_data, axis=3)
@@ -121,9 +127,9 @@ if __name__ == '__main__':
         indices = np.random.randint(0, train_data.shape[0], batch_size)
         imgs = train_data[indices]
         d_loss, g_loss, ae_loss = aae.train(batch_size, imgs, 1)
-        if epoch % 20 == 0:
+        if epoch % 100 == 0:
             print('epoch {}: D loss: {}, G loss: {}, AutoEncoder loss: {}'.format(epoch, d_loss, g_loss, ae_loss))
-            aae.sample_images(epoch)
+            aae.save_samples(imgs, epoch)
 
 
 

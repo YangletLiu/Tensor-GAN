@@ -44,7 +44,9 @@ if __name__ == '__main__':
     init = tf.global_variables_initializer()
     sess.run(init)
 
-    tdsc.train(sess, X_p)
+    tdsc.train(sess, X_p, X, params.sc_max_iter)
+
+    sess.close()
 
 
 

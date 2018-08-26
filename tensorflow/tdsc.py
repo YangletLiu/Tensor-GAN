@@ -120,8 +120,8 @@ class TDSC(object):
 
         return tf.real(self.ifft(S_hat))
 
-    def train(self, sess, X_p):
-        for i in range(params.sc_max_iter):
+    def train(self, sess, X_p, X, iter_num):
+        for i in range(iter_num):
             time_start = time.time()
             print('Iteration: {} / {}'.format(i, params.sc_max_iter),)
 
