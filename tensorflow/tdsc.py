@@ -14,7 +14,7 @@ from block_3d import *
 from hyper_params import HyperParams as params
 
 
-class TDSC(object):
+class Tdsc(object):
 
     def __init__(self, m, n, k):
         # size of X: m x n x k
@@ -137,10 +137,10 @@ class TDSC(object):
             X_p_recon = sess.run(self.X_p_recon)
             X_recon = block_3d_tensor(X_p_recon, np.shape(X))
 
-            self.save_img(X_recon[:, :, 2], './out/{}.png'.format(str(i).zfill(3)))
-
             time_end = time.time()
             print('time:', time_end - time_start, 's')
+        X_recon = block_3d_tensor(X_p_recon, np.shape(X))
+        return X_recon
 
     @staticmethod
     def pinv_svd(a, rcond=1e-15):
@@ -206,3 +206,21 @@ class TDSC(object):
         plt.close(fig)
 
 
+if __name__ == '__main__':
+    X = sio.loadmat('../samples/balloons_101_101_31.mat')['Omsi']
+    if not os.path.exists('./out/'):
+        os.mkdir('./out/')
+
+    Tdsc.save_img(X[:,:,2], './out/origin.png')
+
+    X_p = tensor_block_3d(X)
+    m, n, k = np.shape(X_p)
+    tdsc = Tdsc(m, n, k)
+
+    sess = tf.Session()
+    init = tf.global_variables_initializer()
+    sess.run(init)
+
+    tdsc.train(sess, X_p, X, params.sc_max_iter)
+
+    sess.close()

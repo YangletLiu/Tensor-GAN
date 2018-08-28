@@ -70,7 +70,7 @@ class AAE(object):
 
         return keras.Model(z, d)
 
-    def train(self, batch_size, x, y, iter_num):
+    def train(self, batch_size, x, latent_real, y, iter_num):
 
         real = np.ones([batch_size, 1])
         fake = np.ones([batch_size, 1])
@@ -78,7 +78,7 @@ class AAE(object):
         for i in range(iter_num):
 
             latent_fake = self.encoder.predict(x)
-            latent_real = np.random.normal(size=[batch_size, self.latent_dim])
+            # latent_real = np.random.normal(size=[batch_size, self.latent_dim])
 
             d_loss_real = self.discriminator.train_on_batch(latent_real, real)
             d_loss_fake = self.discriminator.train_on_batch(latent_fake, fake)
@@ -96,39 +96,59 @@ class AAE(object):
         gen_samples = 0.5 * gen_samples + 0.5
 
         fig = plt.figure(figsize=(samples.shape[0], 2))
-        axs = fig.subplots(2, samples.shape[0])
         for i in range(samples.shape[0]):
-            axs[0, i].imshow(np.squeeze(samples[i]), cmap='gray')
-            axs[1, i].imshow(np.squeeze(gen_samples[i]), cmap='gray')
-            axs[0, i].axis('off')
-            axs[0, i].set_xticklabels([])
-            axs[0, i].set_yticklabels([])
-            axs[0, i].set_aspect('equal')
-            axs[1, i].axis('off')
-            axs[1, i].set_xticklabels([])
-            axs[1, i].set_yticklabels([])
-            axs[1, i].set_aspect('equal')
+            ax = fig.add_subplot(2, samples.shape[0], 2*i+1)
+            plt.axis('off')
+            ax.set_xticklabels([])
+            ax.set_yticklabels([])
+            ax.set_aspect('equal')
+            plt.imshow(np.squeeze(samples[i]), cmap='Greys_r')
+
+            ax = fig.add_subplot(2, samples.shape[0], 2*i+2)
+            plt.axis('off')
+            ax.set_xticklabels([])
+            ax.set_yticklabels([])
+            ax.set_aspect('equal')
+            plt.imshow(np.squeeze(gen_samples[i]), cmap='Greys_r')
+
+        # fig = plt.figure(figsize=(samples.shape[0], 2))
+        # axs = fig.subplots(2, samples.shape[0])
+        # for i in range(samples.shape[0]):
+        #     print(samples[i].shape)
+        #     plt.imshow(samples[i], cmap='Greys_r')
+        #     axs[0, i].imshow(np.squeeze(samples[i]))
+        #     axs[1, i].imshow(np.squeeze(gen_samples[i]))
+        #
+        #     axs[0, i].axis('off')
+        #     axs[0, i].set_xticklabels([])
+        #     axs[0, i].set_yticklabels([])
+        #     axs[0, i].set_aspect('equal')
+        #     axs[1, i].axis('off')
+        #     axs[1, i].set_xticklabels([])
+        #     axs[1, i].set_yticklabels([])
+        #     axs[1, i].set_aspect('equal')
         if not os.path.exists('./{}/'.format(folder)):
             os.mkdir('./{}/'.format(folder))
-        fig.savefig("./{}/mnist_{}.png".format(folder, epoch), bbox_inches='tight')
+        fig.savefig("./{}/iter_{}.png".format(folder, epoch), bbox_inches='tight')
         plt.close()
 
 
 if __name__ == '__main__':
-    aae = AAE([28, 28, 1], [28, 28, 1], 256)
+    aae = AAE([32, 32, 3], [32, 32, 3], 256)
     batch_size = 32
     epochs = 10000
-    (train_data, _), (_, _) = keras.datasets.mnist.load_data()
+    (train_data, _), (_, _) = keras.datasets.cifar10.load_data()
     train_data = (train_data.astype(np.float32) - 127.5) / 127.5
-    train_data = np.expand_dims(train_data, axis=3)
 
     for epoch in range(epochs):
         indices = np.random.randint(0, train_data.shape[0], batch_size)
+        latent_real = np.random.normal(size=[batch_size, aae.latent_dim])
         imgs = train_data[indices]
-        d_loss, g_loss, ae_loss = aae.train(batch_size, imgs, 1)
+        d_loss, g_loss, ae_loss = aae.train(batch_size, imgs,latent_real, imgs, 1)
         if epoch % 100 == 0:
             print('epoch {}: D loss: {}, G loss: {}, AutoEncoder loss: {}'.format(epoch, d_loss, g_loss, ae_loss))
-            aae.save_samples(imgs, epoch)
+            samples = train_data[np.random.randint(0, train_data.shape[0], 8)]
+            aae.save_samples(samples, epoch, 'imgs')
 
 
 
