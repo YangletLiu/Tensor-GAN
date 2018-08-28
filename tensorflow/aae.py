@@ -111,22 +111,6 @@ class AAE(object):
             ax.set_aspect('equal')
             plt.imshow(np.squeeze(gen_samples[i]), cmap='Greys_r')
 
-        # fig = plt.figure(figsize=(samples.shape[0], 2))
-        # axs = fig.subplots(2, samples.shape[0])
-        # for i in range(samples.shape[0]):
-        #     print(samples[i].shape)
-        #     plt.imshow(samples[i], cmap='Greys_r')
-        #     axs[0, i].imshow(np.squeeze(samples[i]))
-        #     axs[1, i].imshow(np.squeeze(gen_samples[i]))
-        #
-        #     axs[0, i].axis('off')
-        #     axs[0, i].set_xticklabels([])
-        #     axs[0, i].set_yticklabels([])
-        #     axs[0, i].set_aspect('equal')
-        #     axs[1, i].axis('off')
-        #     axs[1, i].set_xticklabels([])
-        #     axs[1, i].set_yticklabels([])
-        #     axs[1, i].set_aspect('equal')
         if not os.path.exists('./{}/'.format(folder)):
             os.mkdir('./{}/'.format(folder))
         fig.savefig("./{}/iter_{}.png".format(folder, epoch), bbox_inches='tight')
