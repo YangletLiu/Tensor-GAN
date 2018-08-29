@@ -20,21 +20,21 @@ batch_size = 1
 epochs = 2000
 
 def tgan():
-    # (train_data, _), (_, _) = keras.datasets.cifar10.load_data()
-    # train_data = (train_data.astype(np.float32) - 127.5) / 127.5
-    # index = np.random.randint(0, train_data.shape[0])
-    # print(index)
-    # X = train_data[index]
-    X = sio.loadmat('../samples/balloons_101_101_31.mat')['Omsi']
-    X_s = np.zeros([32, 32, 16])
-    for i in range(16):
-        X_s[:,:,i] = transform.resize(X[:,:,i], (32, 32))
-    X = X_s
+    (train_data, _), (_, _) = keras.datasets.cifar10.load_data()
+    train_data = (train_data.astype(np.float32) - 127.5) / 127.5
+    index = np.random.randint(0, train_data.shape[0])
+    print(index)
+    X = train_data[index]
+    # X = sio.loadmat('../samples/balloons_101_101_31.mat')['Omsi']
+    # X_s = np.zeros([32, 32, 16])
+    # for i in range(16):
+    #     X_s[:,:,i] = transform.resize(X[:,:,i], (32, 32))
+    # X = X_s
 
     if not os.path.exists('./out/'):
         os.mkdir('./out/')
 
-    Tdsc.save_img(X[:,:,0], './out/origin.png')
+    Tdsc.save_img(X[:,:,:], './out/origin.png')
 
     X_p = tensor_block_3d(X)
     m, n, k = np.shape(X_p)
@@ -47,7 +47,7 @@ def tgan():
     for i in range(params.sc_max_iter):
         X_recon = tdsc.train(sess, X_p, X, 1)
 
-    Tdsc.save_img(X_recon[:,:,0], './out/recons.png')
+    Tdsc.save_img(X_recon[:,:,:], './out/recons.png')
     C = sess.run(tdsc.C)
 
     aae = AAE(np.shape(X), np.shape(X), np.prod(np.shape(C)))
@@ -60,7 +60,8 @@ def tgan():
         if i % 10 == 0:
             gen_samples = aae.autoencoder.predict(X)
             gen_samples = 0.5 * gen_samples + 0.5
-            aae.save_samples(X[:,:,:,0], gen_samples[:,:,:,0], i, 'out')
+            samples = 0.5 * X + 0.5
+            aae.save_samples(samples, gen_samples[:,:,:,:], i, 'out')
 
     sess.close()
 
