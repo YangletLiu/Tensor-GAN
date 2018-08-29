@@ -90,10 +90,8 @@ class AAE(object):
 
         return d_loss, g_loss, ae_loss
 
-    def save_samples(self, samples, epoch, folder):
+    def save_samples(self, samples, gen_samples, epoch, folder):
 
-        gen_samples = self.autoencoder.predict(samples)
-        gen_samples = 0.5 * gen_samples + 0.5
 
         fig = plt.figure(figsize=(samples.shape[0], 2))
         for i in range(samples.shape[0]):
@@ -132,7 +130,8 @@ if __name__ == '__main__':
         if epoch % 100 == 0:
             print('epoch {}: D loss: {}, G loss: {}, AutoEncoder loss: {}'.format(epoch, d_loss, g_loss, ae_loss))
             samples = train_data[np.random.randint(0, train_data.shape[0], 8)]
-            aae.save_samples(samples, epoch, 'imgs')
+            gen_samples = aae.autoencoder.predict(samples)
+            aae.save_samples(samples, gen_samples, epoch, 'imgs')
 
 
 
