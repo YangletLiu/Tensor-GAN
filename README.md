@@ -2,6 +2,8 @@
 
 ## Tensor Sparse Coding
 
+* [1] F. Jiang, X.-Y. Liu, H. Lu, R. Shen. Efficient multi-dimensional tensor sparse coding using t-linear combinations. AAAI, 2018.
+
 ### Numpy
 - Run `main.py` to get sparse representation of a 3D tensor. 
 - The default sample is in the folder `./samples`, which is a `101*101*31` pixel picture.
