@@ -10,6 +10,7 @@ import scipy.io as sio
 import sys
 import time
 import os
+import keras
 from skimage import transform
 
 from matplotlib import pyplot as plt
@@ -303,6 +304,7 @@ class Atsc(object):
         return tf.real(tf.ifft(S_hat))
 
     def train(self, sess, X, X_p, iter_num):
+
         for i in range(params.sc_max_iter):
             sess.run(self.C_tsta, feed_dict={self.X_p:X_p})
             self.dl_opt.minimize(sess, feed_dict={self.X_p:X_p})
@@ -311,11 +313,11 @@ class Atsc(object):
             X_p_recon = sess.run(self.X_p_recon)
             X_recon = block_3d_tensor(X_p_recon, np.shape(X))
 
-        self.save_img(X_recon[:, :, 2], './out/atsc_init.png')
+        # self.save_img(X_recon, './out/atsc_init.png')
 
         for i in range(iter_num):
-            time_start = time.time()
-            print('Iteration: {} / {}'.format(i, iter_num))
+            # time_start = time.time()
+            # print('Iteration: {} / {}'.format(i+1, iter_num))
 
             for _ in range(5):
                 sess.run(self.disc_opt, feed_dict={self.X_p:X_p})
@@ -332,15 +334,16 @@ class Atsc(object):
             for j in range(1):
                 _, loss = sess.run([self.cl_opt, self.cl_loss], feed_dict={self.X_p:X_p})
 
-            print(loss)
+            # print(loss)
             if i % 10 == 0:
                 X_p_recon = sess.run(self.X_p_recon)
                 X_recon = block_3d_tensor(X_p_recon, np.shape(X))
 
-                self.save_img(X_recon[:, :, 2], './out/atsc_{}.png'.format(str(i).zfill(2)))
+                # self.save_img(X_recon, './out/atsc_{}.png'.format(str(i).zfill(2)))
 
-            time_end = time.time()
-            print('time:', time_end - time_start, 's')
+            # time_end = time.time()
+            # print('time:', time_end - time_start, 's')
+        return loss, X_recon
 
     @staticmethod
     def pinv_svd(a, rcond=1e-15):
@@ -397,6 +400,7 @@ class Atsc(object):
 
     @staticmethod
     def save_img(img, file_name):
+        img = 0.5 * img + 0.5
         fig = plt.figure(figsize=(5, 15))
         ax = fig.add_subplot(111)
         plt.axis('off')
@@ -408,26 +412,118 @@ class Atsc(object):
         plt.close(fig)
 
 
-if __name__ == '__main__':
-    X = sio.loadmat('./samples/balloons_101_101_31.mat')['Omsi']
-    X_s = np.zeros([32, 32, 16])
-    for i in range(16):
-        X_s[:,:,i] = transform.resize(X[:,:,i], (32, 32))
-    X = X_s
+def train_atsc():
+    (x_train, y_train), (_, _) = keras.datasets.cifar10.load_data()
+    train_data = []
+    for x, y in zip(x_train, y_train):
+        if y == 1:
+            train_data.append((x.astype(np.float32) - 127.5) / 127.5)
+
+    # train_data = (train_data.astype(np.float32) - 127.5) / 127.5
+    # X = sio.loadmat('./samples/balloons_101_101_31.mat')['Omsi']
+    # X_s = np.zeros([32, 32, 16])
+    # for i in range(16):
+    #     X_s[:,:,i] = transform.resize(X[:,:,i], (32, 32))
+    # X = X_s
     if not os.path.exists('./out/'):
         os.mkdir('./out/')
+    if not os.path.exists('./backup/'):
+        os.mkdir('./backup/')
+    if not os.path.exists('./backup/latest/'):
+        os.mkdir('./backup/latest/')
+    # Atsc.save_img(X, './out/origin.png')
 
-    Atsc.save_img(X[:,:,2], './out/origin.png')
-
+    index = np.random.randint(0, len(train_data))
+    X = train_data[index]
     X_p = tensor_block_3d(X)
     m, n, k = np.shape(X_p)
-    tdsc = Atsc(m, n, k)
+    atsc = Atsc(m, n, k)
 
     sess = tf.Session()
     init = tf.global_variables_initializer()
     sess.run(init)
+    if tf.train.get_checkpoint_state('./backup/latest/'):
+        saver = tf.train.Saver()
+        saver.restore(sess, './backup/latest/')
+        print('********Restore the latest trained parameters.********')
 
-    tdsc.train(sess, X, X_p, 1000)
+    for step in range(100000):
+
+        index = np.random.randint(0, len(train_data))
+        X = train_data[index]
+        X_p = tensor_block_3d(X)
+
+        loss, X_recon = atsc.train(sess, X, X_p, 1)
+        if step % 100 == 0:
+            saver = tf.train.Saver()
+            saver.save(sess, './backup/latest/', write_meta_graph=False)
+            print('step:{}, loss:{}'.format(step, loss))
+            Atsc.save_img(X_recon, './out/atsc_{}.png'.format(str(step).zfill(8)))
 
     sess.close()
+
+def eval_atsc():
+    (x_train, y_train), (_, _) = keras.datasets.cifar10.load_data()
+    train_data = []
+    for x, y in zip(x_train, y_train):
+        if y == 1:
+            train_data.append((x.astype(np.float32) - 127.5) / 127.5)
+
+    # train_data = (train_data.astype(np.float32) - 127.5) / 127.5
+    # X = sio.loadmat('./samples/balloons_101_101_31.mat')['Omsi']
+    # X_s = np.zeros([32, 32, 16])
+    # for i in range(16):
+    #     X_s[:,:,i] = transform.resize(X[:,:,i], (32, 32))
+    # X = X_s
+    if not os.path.exists('./eval/'):
+        os.mkdir('./eval/')
+    if not os.path.exists('./backup/'):
+        os.mkdir('./backup/')
+    if not os.path.exists('./backup/latest/'):
+        os.mkdir('./backup/latest/')
+
+    index = np.random.randint(0, len(train_data))
+    X = train_data[index]
+    X_p = tensor_block_3d(X)
+    m, n, k = np.shape(X_p)
+    atsc = Atsc(m, n, k)
+    C_input = tf.placeholder(tf.float32, [params.r, n, k])
+    C_assign = tf.assign(atsc.C, C_input)
+
+    sess = tf.Session()
+    init = tf.global_variables_initializer()
+    sess.run(init)
+    if tf.train.get_checkpoint_state('./backup/latest/'):
+        saver = tf.train.Saver()
+        saver.restore(sess, './backup/latest/')
+        print('********Restore the latest trained parameters.********')
+
+    index = np.random.randint(0, len(train_data))
+    X = train_data[index]
+    X_p = tensor_block_3d(X)
+    Atsc.save_img(X, 'eval/img1.png')
+    C1 = sess.run(atsc.C_tsta, feed_dict={atsc.X_p:X_p})
+    C1 = sess.run(atsc.C)
+
+    index = np.random.randint(0, len(train_data))
+    X = train_data[index]
+    X_p = tensor_block_3d(X)
+    Atsc.save_img(X, 'eval/img2.png')
+    C2 = sess.run(atsc.C_tsta, feed_dict={atsc.X_p:X_p})
+    C2 = sess.run(atsc.C)
+
+    C3 = (C1)
+
+    sess.run(C_assign, feed_dict={C_input:C3})
+
+    X_p_recon = sess.run(atsc.X_p_recon)
+    X_recon = block_3d_tensor(X_p_recon, np.shape(X))
+
+    Atsc.save_img(X_recon, 'eval/recon.png')
+
+    sess.close()
+
+if __name__ == '__main__':
+    eval_atsc()
+
 
