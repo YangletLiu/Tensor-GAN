@@ -16,5 +16,5 @@ class HyperParams():
     sigma3 = 1e-2
 
     z_dim = 128
-    learning_rate = 0.01
+    learning_rate = 0.001
     batch_size = 32
