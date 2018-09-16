@@ -385,7 +385,7 @@ def tgan_aae():
     for i in range(params.sc_max_iter):
         X_recon = tdsc.train(sess, X_p, X, 1)
 
-    Tdsc.save_img(X_recon[:,:,0], './out/recons.png')
+    Tdsc.save_img(X_recon, './out/recons.png')
     C = sess.run(tdsc.C)
 
     aae = AAE(np.shape(X), np.shape(X), np.prod(np.shape(C)))
