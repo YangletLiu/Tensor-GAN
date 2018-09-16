@@ -18,3 +18,6 @@
 ## Tensor SC with GAN
 - A sample result:
 ![image](https://github.com/hust512/Tensor-GAN/blob/master/tensorflow/tgan_sample.png)
+
+## Adversarial Tensor Sparse Coding
+- Please find the codes in the folder `ATSC`.
