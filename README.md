@@ -5,7 +5,5 @@
 - The version of Python is in the folder `./2DSC`. Please run `main.py` to start.
 - The version of Tensorflow has been implemented, whose codes are in the folder `./tensorflow`. Please run `train.py` to start. Then the reconstructions by tensor sparses will be saved in `./tensorflow/out/`.
 
-## Adversarial Tensor Sparse Coding
-- Please find the codes in the folder `ATSC`.
-
 ## Tensor GAN
+- Run `tgan` to train and generate images. We select CIFAR-10 dataset.
