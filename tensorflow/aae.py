@@ -70,28 +70,36 @@ class AAE(object):
 
         return keras.Model(z, d)
 
-    def train(self, batch_size, x, latent_real, y, iter_num):
+    def train(self, batch_size, train_data, iter_num):
 
         real = np.ones([batch_size, 1])
         fake = np.zeros([batch_size, 1])
 
         for i in range(iter_num):
+            indices = np.random.randint(0, train_data.shape[0], batch_size)
+            xs = train_data[indices]
 
-            latent_fake = self.encoder.predict(x)
-            # latent_real = np.random.normal(size=[batch_size, self.latent_dim])
+            latent_fake = self.encoder.predict(xs)
+            latent_real = np.random.normal(size=[batch_size, self.latent_dim])
 
             d_loss_real = self.discriminator.train_on_batch(latent_real, real)
             d_loss_fake = self.discriminator.train_on_batch(latent_fake, fake)
             d_loss = 0.5 * np.add(d_loss_fake, d_loss_real)
 
-            g_loss = self.generator.train_on_batch(x, real)
+            g_loss = self.generator.train_on_batch(xs, real)
 
-            ae_loss = self.autoencoder.train_on_batch(x, y)
+            ae_loss = self.autoencoder.train_on_batch(xs, xs)
+
+            if i % 100 == 0:
+                print('epoch {}: D loss: {}, G loss: {}, AutoEncoder loss: {}'.format(i, d_loss, g_loss, ae_loss))
+                samples = train_data[np.random.randint(0, train_data.shape[0], 8)]
+                gen_samples = aae.autoencoder.predict(samples)
+                aae.save_samples(samples, gen_samples, i, 'imgs')
 
         return d_loss, g_loss, ae_loss
 
-    def save_samples(self, samples, gen_samples, epoch, folder):
-
+    @staticmethod
+    def save_samples(samples, gen_samples, epoch, folder):
 
         fig = plt.figure(figsize=(samples.shape[0], 2))
         for i in range(samples.shape[0]):
@@ -121,18 +129,6 @@ if __name__ == '__main__':
     epochs = 10000
     (train_data, _), (_, _) = keras.datasets.cifar10.load_data()
     train_data = (train_data.astype(np.float32) - 127.5) / 127.5
-
-    for epoch in range(epochs):
-        indices = np.random.randint(0, train_data.shape[0], batch_size)
-        latent_real = np.random.normal(size=[batch_size, aae.latent_dim])
-        imgs = train_data[indices]
-        d_loss, g_loss, ae_loss = aae.train(batch_size, imgs,latent_real, imgs, 1)
-        if epoch % 100 == 0:
-            print('epoch {}: D loss: {}, G loss: {}, AutoEncoder loss: {}'.format(epoch, d_loss, g_loss, ae_loss))
-            samples = train_data[np.random.randint(0, train_data.shape[0], 8)]
-            gen_samples = aae.autoencoder.predict(samples)
-            aae.save_samples(samples, gen_samples, epoch, 'imgs')
-
-
+    aae.train(batch_size, train_data, epochs)
 
 
