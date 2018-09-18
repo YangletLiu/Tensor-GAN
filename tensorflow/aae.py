@@ -23,13 +23,13 @@ class AAE(object):
 
         x = keras.Input(self.input_shape)
 
-        self.discriminator = self._creat_discriminator()
+        self.discriminator = self._create_discriminator()
         self.discriminator.compile(optimizer=optimizer, loss='binary_crossentropy')
 
         self.discriminator.trainable = False
 
-        self.encoder = self._creat_encoder()
-        self.decoder = self._creat_decoder()
+        self.encoder = self._create_encoder()
+        self.decoder = self._create_decoder()
 
         g = self.encoder(x)
         y = self.decoder(g)
@@ -44,16 +44,16 @@ class AAE(object):
         self.discriminator.summary()
         self.autoencoder.summary()
 
-    def _creat_encoder(self):
+    def _create_encoder(self):
         x = keras.Input(shape=self.input_shape)
         h = keras.layers.Flatten()(x)
         h = keras.layers.Dense(1024, activation='relu')(h)
         h = keras.layers.Dense(512, activation='relu')(h)
-        g = keras.layers.Dense(self.latent_dim, activation='sigmoid')(h)
+        g = keras.layers.Dense(self.latent_dim)(h)
 
         return keras.Model(x, g)
 
-    def _creat_decoder(self):
+    def _create_decoder(self):
         z = keras.Input(shape=(self.latent_dim,))
         h = keras.layers.Dense(512, activation='relu')(z)
         h = keras.layers.Dense(1024, activation='relu')(h)
@@ -62,7 +62,7 @@ class AAE(object):
 
         return keras.Model(z, y)
 
-    def _creat_discriminator(self):
+    def _create_discriminator(self):
         z = keras.Input(shape=(self.latent_dim,))
         h = keras.layers.Dense(512, activation='relu')(z)
         h = keras.layers.Dense(256, activation='relu')(h)
@@ -73,7 +73,7 @@ class AAE(object):
     def train(self, batch_size, x, latent_real, y, iter_num):
 
         real = np.ones([batch_size, 1])
-        fake = np.ones([batch_size, 1])
+        fake = np.zeros([batch_size, 1])
 
         for i in range(iter_num):
 

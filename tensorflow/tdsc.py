@@ -139,7 +139,6 @@ class Tdsc(object):
 
             time_end = time.time()
             print('time:', time_end - time_start, 's')
-        X_recon = block_3d_tensor(X_p_recon, np.shape(X))
         return X_recon
 
     @staticmethod
