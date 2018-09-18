@@ -1,12 +1,20 @@
 
 class HyperParams():
-    # patch_size = 5
-    patch_size = 3 # for rgb image
-    step = 2
-    # r = 30
-    r = 20 # for rgb image
-    eta = 1.01
-    tsta_max_iter = 50
-    beta = 0.8
-    sc_max_iter = 10
-    learning_rate = 0.01
+    # tensor to block parameters
+    patch_size = 3
+    step = 1
+    r = 20
+
+    # TGAN parameters
+    # gradient penalty coefficient
+    beta = 10
+    # content loss coefficient
+    sigma1 = 1
+    # discriminator loss coefficient
+    sigma2 = 1e-2
+    # generator loss coefficient
+    sigma3 = 1e-2
+
+    z_dim = 128
+    learning_rate = 0.001
+    batch_size = 32

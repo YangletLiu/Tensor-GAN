@@ -1,18 +1,9 @@
-# Tensor-GAN
-
 ## Tensor Sparse Coding
 
-### Numpy
-- Run `main.py` to get sparse representation of a 3D tensor. 
-- The default sample is in the folder `./samples`, which is a `101*101*31` pixel picture.
-- The result of default sample is as follows, where the parameters are set in file `hyper_params.py`:
- ![image](https://github.com/hust512/Tensor-GAN/blob/master/balloon_sc_result.png)
- 
- ### Tensorflow
-- The version of Tensorflow has been implemented, whose codes are in the folder `./tensorflow`. Please run `train.py` to start. Then the reconstructions by tensor sparses will be saved in `./tensorflow/out/`.
-- The result of Tensorflow is also as follows with same parameters:
-![image](https://github.com/hust512/Tensor-GAN/blob/master/tensorflow/balloon_sc_tensorflow.png)
+* [1] F. Jiang, X.-Y. Liu, H. Lu, R. Shen. Efficient multi-dimensional tensor sparse coding using t-linear combinations. AAAI, 2018.
 
-## Tensor SC with GAN
-- A sample result:
-![image](https://github.com/hust512/Tensor-GAN/blob/master/tensorflow/tgan_sample.png)
+- The version of Python is in the folder `./2DSC`. Please run `main.py` to start.
+- The version of Tensorflow has been implemented, whose codes are in the folder `./tensorflow`. Please run `train.py` to start. Then the reconstructions by tensor sparses will be saved in `./tensorflow/out/`.
+
+## Tensor GAN
+- Run `tgan` to train and generate images. We select CIFAR-10 dataset.

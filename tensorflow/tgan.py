@@ -4,20 +4,25 @@
 # Time: 2018/8/26 21:01
 
 import tensorflow as tf
+<<<<<<< HEAD
 import keras
+=======
+>>>>>>> dcf5de40566c980448c4dc512d78e98f6b0b0e8e
 import os
 import scipy.io as sio
 
 from skimage import transform
-from aae import *
 from matplotlib import pyplot as plt
 from tdsc import Tdsc
 from block_3d import *
 from tensor_product import *
 from hyper_params import HyperParams as params
 
+<<<<<<< HEAD
 from keras import backend as K
 from keras.engine.topology import Layer
+=======
+>>>>>>> dcf5de40566c980448c4dc512d78e98f6b0b0e8e
 import numpy as np
 
 batch_size = 1
@@ -38,8 +43,13 @@ def elu(x):
 
 def xavier_init(size):
     input_dim = size[0]
+<<<<<<< HEAD
     stddev = 1. / tf.sqrt(input_dim / 2.)
     return tf.random_normal(shape=size, stddev=stddev)
+=======
+    stddev = 1. / np.sqrt(input_dim / 2.)
+    return tf.random_normal(shape=size, stddev=stddev, dtype=tf.float32)
+>>>>>>> dcf5de40566c980448c4dc512d78e98f6b0b0e8e
 
 
 def he_init(size, stride):
@@ -138,10 +148,17 @@ class Network(object):
             input_dim = input.get_shape().as_list()[1]
 
             init_w = xavier_init([input_dim, output_dim])
+<<<<<<< HEAD
             weight = tf.get_variable('weight', initializer=init_w)
 
             init_b = tf.zeros([output_dim])
             bias = tf.get_variable('bias', initializer=init_b)
+=======
+            weight = tf.get_variable('weight', initializer=init_w, dtype=tf.float32)
+
+            init_b = tf.zeros([output_dim])
+            bias = tf.get_variable('bias', initializer=init_b, dtype=tf.float32)
+>>>>>>> dcf5de40566c980448c4dc512d78e98f6b0b0e8e
 
             output = tf.add(tf.matmul(input, weight), bias)
 
@@ -156,10 +173,17 @@ class Tgan(object):
         self.latent_dim = latent_dim
         self.input_shape = input_shape
         self.output_shape = output_shape
+<<<<<<< HEAD
+=======
+        self.m = input_shape[0]
+        self.n = input_shape[1]
+        self.k = input_shape[2]
+>>>>>>> dcf5de40566c980448c4dc512d78e98f6b0b0e8e
 
         self.tdsc = Tdsc(input_shape[0], input_shape[1], input_shape[2])
         self.coeff_shape = (params.r, self.tdsc.n, self.tdsc.k)
 
+<<<<<<< HEAD
         self.discriminator = Network()
         self.encoder = Network()
 
@@ -168,12 +192,24 @@ class Tgan(object):
         with tf.variable_scope('generator'):
             self.g = self._create_encoder(self.z)
         self.y = self._create_decoder(self.g)
+=======
+        self.z = tf.placeholder(tf.float32, (1, self.latent_dim), name='z')
+        self.x = tf.placeholder(tf.float32, self.input_shape, name='x')
+
+        self.d_vars = []
+        self.enc_vars = []
+
+        with tf.variable_scope('generator'):
+            self.g = self._create_encoder(self.z)
+            self.y = self._create_decoder(self.g)
+>>>>>>> dcf5de40566c980448c4dc512d78e98f6b0b0e8e
 
         with tf.variable_scope('discriminator') as scope:
             self.d_real = self._create_discriminator(self.tdsc.C)
             scope.reuse_variables()
             self.d_fake = self._create_discriminator(self.g)
 
+<<<<<<< HEAD
         content_loss = tf.reduce_sum(tf.square(self.y - self.tdsc.X_p))
 
         disc_loss = -tf.reduce_mean(self.d_real) + tf.reduce_mean(self.d_fake)
@@ -203,10 +239,75 @@ class Tgan(object):
         h = lrelu(h)
         h = self.encoder.dense(h, np.prod(self.coeff_shape))
         h = tf.reshape(h, self.coeff_shape)
+=======
+        content_loss = tf.reduce_sum(tf.square(self.y - self.x))
+
+        # self.d_loss = -tf.reduce_mean(self.d_real) + tf.reduce_mean(self.d_fake)
+        # self.g_loss = -tf.reduce_mean(self.d_fake)
+        self.ae_loss = content_loss
+        real = tf.constant([[1]], dtype=tf.float32)
+        fake = tf.constant([[0]], dtype=tf.float32)
+        self.d_loss_real = tf.nn.sigmoid_cross_entropy_with_logits(labels=real, logits=self.d_real)
+        self.d_loss_fake = tf.nn.sigmoid_cross_entropy_with_logits(labels=fake, logits=self.d_fake)
+        self.g_loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=real, logits=self.d_fake)
+
+        self.d_opt_real = tf.train.AdamOptimizer(
+            learning_rate=0.001,
+            beta1=0.5,
+            beta2=0.9
+        ).minimize(self.d_loss_real,
+                   var_list=self.d_vars)
+
+        self.d_opt_fake = tf.train.AdamOptimizer(
+            learning_rate=0.001,
+            beta1=0.5,
+            beta2=0.9
+        ).minimize(self.d_loss_fake,
+                   var_list=self.d_vars)
+
+        self.g_opt = tf.train.AdamOptimizer(
+            learning_rate=0.001,
+            beta1=0.5,
+            beta2=0.9
+        ).minimize(self.g_loss,
+                   var_list=self.enc_vars)
+
+        # self.d_opt = tf.train.AdamOptimizer(
+        #     learning_rate=0.001,
+        #     beta1=0.5,
+        #     beta2=0.9
+        # ).minimize(self.d_loss,
+        #            var_list=self.d_vars)
+        #
+        # self.g_opt = tf.train.AdamOptimizer(
+        #     learning_rate=0.001,
+        #     beta1=0.5,
+        #     beta2=0.9
+        # ).minimize(self.g_loss,
+        #            var_list=self.enc_vars)
+
+        self.ae_opt = tf.train.AdamOptimizer(
+            learning_rate=0.001,
+            beta1=0.5,
+            beta2=0.9
+        ).minimize(self.ae_loss,
+                   var_list=self.enc_vars)
+
+    def _create_encoder(self, z):
+        encoder = Network()
+        h = encoder.dense(z, 256)
+        h = lrelu(h)
+        h = encoder.dense(h, 1024)
+        h = lrelu(h)
+        h = encoder.dense(h, np.prod(self.coeff_shape))
+        h = tf.reshape(h, self.coeff_shape)
+        self.enc_vars = encoder.weights + encoder.biases
+>>>>>>> dcf5de40566c980448c4dc512d78e98f6b0b0e8e
 
         return h
 
     def _create_decoder(self, coeff):
+<<<<<<< HEAD
         y = self.tproduct(self.tdsc.D, coeff)
         return y
 
@@ -250,6 +351,105 @@ class Tgan(object):
 
 def train_tgan():
     X = sio.loadmat('../samples/balloons_101_101_31.mat')['Omsi']
+=======
+        y = self.tensor_product(self.tdsc.D, '', coeff, '')
+        return y
+
+    def _create_discriminator(self, coeff):
+        discriminator = Network()
+        # h = tf.layers.flatten(coeff)
+        h = tf.reshape(coeff, (1, np.prod(self.coeff_shape)))
+        h = discriminator.dense(h, 1024)
+        h = lrelu(h)
+        h = discriminator.dense(h, 256)
+        h = lrelu(h)
+        h = discriminator.dense(h, 1)
+        self.d_vars = discriminator.weights + discriminator.biases
+
+        return h
+
+    def tensor_product(self, P, ch1, Q, ch2):
+        P_hat = tf.fft(tf.complex(P, tf.zeros(tf.shape(P), dtype=tf.float32)))
+        Q_hat = tf.fft(tf.complex(Q, tf.zeros(tf.shape(Q), dtype=tf.float32)))
+        p_hat_list = [tf.squeeze(p) for p in tf.split(P_hat, self.k, axis=-1)]
+        q_hat_list = [tf.squeeze(q) for q in tf.split(Q_hat, self.k, axis=-1)]
+
+        if ch1 == 't' and ch2 == 't':
+            S_hat = tf.concat([tf.expand_dims(tf.matmul(tf.transpose(p_hat), tf.transpose(q_hat)), axis=-1)
+                               for (p_hat, q_hat) in zip(p_hat_list, q_hat_list)], axis=-1)
+        elif ch1 == 't':
+            S_hat = tf.concat([tf.expand_dims(tf.matmul(tf.transpose(p_hat), q_hat), axis=-1)
+                               for (p_hat, q_hat) in zip(p_hat_list, q_hat_list)], axis=-1)
+        elif ch2 == 't':
+            S_hat = tf.concat([tf.expand_dims(tf.matmul(p_hat, tf.transpose(q_hat)), axis=-1)
+                               for (p_hat, q_hat) in zip(p_hat_list, q_hat_list)], axis=-1)
+        else:
+            S_hat = tf.concat([tf.expand_dims(tf.matmul(p_hat, q_hat), axis=-1)
+                               for (p_hat, q_hat) in zip(p_hat_list, q_hat_list)], axis=-1)
+
+        return tf.real(tf.ifft(S_hat))
+
+    def train(self, sess, X, X_p, iter_num):
+
+        for i in range(params.sc_max_iter):
+            X_recon = self.tdsc.train(sess, X, X_p, 1)
+            Tdsc.save_img(X_recon[:,:,0], './out/{}.png'.format(i))
+
+        zs = np.random.normal(size=(1, self.latent_dim))
+
+        for i in range(iter_num):
+            _, d_loss_real = sess.run([self.d_opt_real, self.d_loss_real], feed_dict={self.z:zs})
+            _, d_loss_fake = sess.run([self.d_opt_fake, self.d_loss_fake], feed_dict={self.z:zs})
+            d_loss = 0.5 * np.add(d_loss_fake, d_loss_real)
+            _, g_loss = sess.run([self.g_opt, self.g_loss], feed_dict={self.z:zs})
+            _, ae_loss = sess.run([self.ae_opt, self.ae_loss], feed_dict={self.z:zs, self.x:X_p})
+            if i % 10 == 0:
+                print('epoch {}: D loss: {}, G loss: {}, AutoEncoder loss: {}'.format(
+                    i, d_loss, g_loss, ae_loss))
+                y = sess.run(self.y, feed_dict={self.z:zs})
+                X_recon = block_3d_tensor(y, np.shape(X))
+                X_recon = np.expand_dims(X_recon, axis=0)
+                X_batch = np.expand_dims(X, axis=0)
+                self.save_samples(X_batch[:,:,:,0], X_recon[:,:,:,0], i, 'out')
+
+    def save_samples(self, samples, gen_samples, epoch, folder):
+
+        fig = plt.figure(figsize=(samples.shape[0], 2))
+        for i in range(samples.shape[0]):
+            ax = fig.add_subplot(2, samples.shape[0], 2*i+1)
+            plt.axis('off')
+            ax.set_xticklabels([])
+            ax.set_yticklabels([])
+            ax.set_aspect('equal')
+            plt.imshow(np.squeeze(samples[i]), cmap='Greys_r')
+
+            ax = fig.add_subplot(2, samples.shape[0], 2*i+2)
+            plt.axis('off')
+            ax.set_xticklabels([])
+            ax.set_yticklabels([])
+            ax.set_aspect('equal')
+            plt.imshow(np.squeeze(gen_samples[i]), cmap='Greys_r')
+
+        if not os.path.exists('./{}/'.format(folder)):
+            os.mkdir('./{}/'.format(folder))
+        fig.savefig("./{}/iter_{}.png".format(folder, epoch), bbox_inches='tight')
+        plt.close()
+
+    @staticmethod
+    def fft(a):
+        def np_fft(a):
+            return np.fft.fft(a, axis=-1)
+        return tf.py_func(np_fft, [a], tf.complex64)
+
+    @staticmethod
+    def ifft(a):
+        def np_ifft(a):
+            return np.fft.ifft(a, axis=-1)
+        return tf.py_func(np_ifft, [a], tf.complex64)
+
+def train_tgan():
+    X = sio.loadmat('./samples/balloons_101_101_31.mat')['Omsi']
+>>>>>>> dcf5de40566c980448c4dc512d78e98f6b0b0e8e
     X_s = np.zeros([32, 32, 16])
     for i in range(16):
         X_s[:,:,i] = transform.resize(X[:,:,i], (32, 32))
@@ -267,11 +467,16 @@ def train_tgan():
     init = tf.global_variables_initializer()
     sess.run(init)
 
+<<<<<<< HEAD
     for i in range(params.sc_max_iter):
         X_recon = tgan.tdsc.train(sess, X_p, X, 1)
 
     X_batch = np.expand_dims(X, axis=0)
     tgan.train(1, X_batch, 1000)
+=======
+    tgan.train(sess, X, X_p, 10000)
+    sess.close()
+>>>>>>> dcf5de40566c980448c4dc512d78e98f6b0b0e8e
 
 
 def tgan_aae():
@@ -280,7 +485,7 @@ def tgan_aae():
     # index = np.random.randint(0, train_data.shape[0])
     # print(index)
     # X = train_data[index]
-    X = sio.loadmat('../samples/balloons_101_101_31.mat')['Omsi']
+    X = sio.loadmat('./samples/balloons_101_101_31.mat')['Omsi']
     X_s = np.zeros([32, 32, 16])
     for i in range(16):
         X_s[:,:,i] = transform.resize(X[:,:,i], (32, 32))
@@ -302,7 +507,7 @@ def tgan_aae():
     for i in range(params.sc_max_iter):
         X_recon = tdsc.train(sess, X_p, X, 1)
 
-    Tdsc.save_img(X_recon[:,:,0], './out/recons.png')
+    Tdsc.save_img(X_recon, './out/recons.png')
     C = sess.run(tdsc.C)
 
     aae = AAE(np.shape(X), np.shape(X), np.prod(np.shape(C)))
