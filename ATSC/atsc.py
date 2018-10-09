@@ -524,6 +524,7 @@ def eval_atsc():
     sess.close()
 
 if __name__ == '__main__':
-    eval_atsc()
+    train_atsc()
+    # eval_atsc()
 
 

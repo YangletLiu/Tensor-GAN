@@ -72,10 +72,11 @@ class Tgan(object):
         self.k = self.block_shape[2]
         self.r = r
         self.z_dim = z_dim
+        self.latent_shape = (self.m, self.r, self.k)
+
 
         self.X_p = tf.placeholder(tf.float32, [hp.batch_size, self.m, self.n, self.k], name='X_p')
         self.z = tf.placeholder(tf.float32, [hp.batch_size, self.z_dim], name='z')
-
         self.gen_vars = []
         self.disc_vars = []
 
@@ -122,39 +123,64 @@ class Tgan(object):
         ).minimize(self.gen_loss, var_list=self.gen_vars)
 
     def _discriminator(self, img):
-        h = tf.reshape(img, (-1, np.prod((self.m, self.n, self.k))))
-        h, params = self.dense(h, 1024, layer_num=0)
-        self.disc_vars.extend(params)
-        h = lrelu(h)
-        h, params = self.dense(h, 256, layer_num=1)
-        self.disc_vars.extend(params)
-        h = lrelu(h)
-        h, params = self.dense(h, 1, layer_num=2)
-        self.disc_vars.extend(params)
+        layer_num = 0
+        params = []
+
+        h = tf.reshape(img, (-1, np.prod(self.block_shape)))
+        h, p = self.dense(h, 1024, layer_num=layer_num)
+        params.extend(p)
+        layer_num += 1
+        h = relu(h)
+
+        h, p = self.dense(h, 256, layer_num=layer_num)
+        params.extend(p)
+        layer_num += 1
+        h = relu(h)
+
+        h, p = self.dense(h, 1, layer_num=layer_num)
+        params.extend(p)
+        layer_num += 1
+
+        self.disc_vars = params
 
         return h
 
     def _generator(self, z):
-        h, params = self.dense(z, 256, layer_num=0)
-        self.gen_vars.extend(params)
-        h = lrelu(h)
-        h, params = self.dense(h, 1024, layer_num=1)
-        self.gen_vars.extend(params)
-        h = lrelu(h)
-        h, params = self.dense(h, np.prod((self.r, self.n, self.k)), layer_num=2)
-        self.gen_vars.extend(params)
-        h = lrelu(h)
-        h = tf.reshape(h, [-1, self.r, self.n, self.k])
-        h, params = self.dc_product(h, layer_num=3)
-        self.gen_vars.extend(params)
+        layer_num = 0
+        params = []
+
+        h, p = self.dense(z, 256, layer_num=layer_num)
+        params.extend(p)
+        layer_num += 1
+        h = relu(h)
+
+        # h, p = self.dense(h, 1024, layer_num=layer_num)
+        # params.extend(p)
+        # layer_num += 1
+        # h = lrelu(h)
+
+        h, p = self.dense(h, np.prod(self.latent_shape), layer_num=layer_num)
+        params.extend(p)
+        layer_num += 1
+        h = relu(h)
+
+        h = tf.reshape(h, [-1, self.latent_shape[0], self.latent_shape[1], self.latent_shape[2]])
+        h, p = self.dc_product(h, layer_num=layer_num)
+        params.extend(p)
+        # h = tf.nn.sigmoid(h)
+        layer_num += 1
+
+        self.gen_vars = params
         return h
 
     def dc_product(self, input, layer_num):
         with tf.variable_scope('dc_product' + str(layer_num)):
-            init_tw = init_D(hp.patch_size, hp.r)
+            init_tw = tf.zeros((self.r, self.n, self.k))
             tweight = tf.get_variable('tweight', initializer=init_tw, dtype=tf.float32)
-            output = tf.concat([tf.expand_dims(self.tensor_product(tweight, tf.squeeze(c)), axis=0)
-                                for c in tf.split(input, hp.batch_size, axis=0)], axis=0)
+            # tbias = tf.get_variable('tbias', initializer=tf.zeros(self.block_shape), dtype=tf.float32)
+            output = tf.concat([tf.expand_dims(self.tensor_product(tf.squeeze(t), tweight), axis=0)
+                                for t in tf.split(input, hp.batch_size, axis=0)], axis=0)
+
             params = [tweight]
 
         return output, params
@@ -188,7 +214,7 @@ class Tgan(object):
         for step in range(step_num):
             for _ in range(5):
                 indices = np.random.randint(0, train_data.shape[0], size=(hp.batch_size,))
-                zs = np.random.uniform(-1., 1., size=(hp.batch_size, self.z_dim))
+                zs = self.sample_z(hp.batch_size, self.z_dim)
                 X_ps = train_data[indices]
                 _, dl = sess.run([self.disc_opt, self.disc_loss], feed_dict={self.X_p:X_ps, self.z:zs})
 
@@ -198,13 +224,13 @@ class Tgan(object):
             _, gl = sess.run([self.gen_opt, self.gen_loss], feed_dict={self.X_p:X_ps, self.z:zs})
 
             if step % 100 == 0:
-                saver = tf.train.Saver()
-                saver.save(sess, './backup/', write_meta_graph=False)
                 print('step:{}, disc_loss={}, gen_loss={}'.format(step, dl, gl))
-                zs = np.random.uniform(-1., 1., size=(hp.batch_size, self.z_dim))
+                zs = self.sample_z(hp.batch_size, self.z_dim)
                 Y_ps = sess.run(self.Y_p, feed_dict={self.z:zs})
                 Y = block_3d_tensor(Y_ps[0], self.tensor_shape)
                 self.save_img(Y, './out/{}.png'.format(str(step).zfill(8)))
+                saver = tf.train.Saver()
+                saver.save(sess, './backup/', write_meta_graph=False)
 
     @staticmethod
     def tensor_product(P, Q):
@@ -221,6 +247,10 @@ class Tgan(object):
                            for (p_hat, q_hat) in zip(p_hat_list, q_hat_list)], axis=-1)
 
         return tf.real(tf.ifft(S_hat))
+
+    @staticmethod
+    def sample_z(batch_size, z_dim):
+        return np.random.uniform(-1., 1., (batch_size, z_dim))
 
     @staticmethod
     def save_img(img, file_name):
@@ -242,10 +272,11 @@ def train_tgan():
     x_train = x_train[np.where(y_train == 1)[0]]
     train_data = []
     for i in range(x_train.shape[0]):
-        train_data.append(tensor_block_3d(x_train[i]))
+        tmp = transform.resize(x_train[i], (16, 16))
+        train_data.append(tensor_block_3d(tmp))
     train_data = np.array(train_data)
 
-    tensor_shape = np.shape(x_train[0])
+    tensor_shape = (16, 16, 3)
     block_shape = np.shape(train_data[0])
 
     tgan = Tgan(tensor_shape, block_shape, hp.r, hp.z_dim)
