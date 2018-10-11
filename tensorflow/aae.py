@@ -36,8 +36,10 @@ class AAE(object):
         y = self.decoder(g)
         d = self.discriminator(g)
 
-        self.autoencoder = keras.Model(x, y)
-        self.autoencoder.compile(optimizer=optimizer, loss='mse')
+        self.autoencoder = keras.Model(x, [y, d])
+        self.autoencoder.compile(optimizer=optimizer,
+                                 loss=['mse', 'binary_crossentropy'],
+                                 loss_weights=[0.999, 0.001])
 
         self.generator = keras.Model(x, d)
         self.generator.compile(optimizer=optimizer, loss='binary_crossentropy')
@@ -48,6 +50,7 @@ class AAE(object):
     def _create_encoder(self):
         x = keras.Input(shape=self.input_shape)
         h = keras.layers.Flatten()(x)
+        h = keras.layers.Dense(2056, activation='relu')(h)
         h = keras.layers.Dense(1024, activation='relu')(h)
         h = keras.layers.Dense(512, activation='relu')(h)
         g = keras.layers.Dense(self.latent_dim)(h)
@@ -58,6 +61,7 @@ class AAE(object):
         z = keras.Input(shape=(self.latent_dim,))
         h = keras.layers.Dense(512, activation='relu')(z)
         h = keras.layers.Dense(1024, activation='relu')(h)
+        h = keras.layers.Dense(2056, activation='relu')(h)
         h = keras.layers.Dense(np.prod(self.output_shape), activation='tanh')(h)
         y = keras.layers.Reshape(self.output_shape)(h)
 
@@ -91,13 +95,13 @@ class AAE(object):
 
             g_loss = self.generator.train_on_batch(xs, real)
 
-            ae_loss = self.autoencoder.train_on_batch(xs, xs)
+            ae_loss = self.autoencoder.train_on_batch(xs, [xs, real])
 
             if i % 100 == 0:
                 print('epoch {}: D loss: {}, G loss: {}, AutoEncoder loss: {}'.format(i, d_loss, g_loss, ae_loss))
-                samples = train_data[np.random.randint(0, train_data.shape[0], 8)]
-                gen_samples = self.autoencoder.predict(samples)
-                self.save_samples(samples, gen_samples, i, folder)
+                zs = np.random.normal(size=[batch_size, self.latent_dim])
+                gen_samples = self.decoder.predict(zs)
+                self.save_samples(gen_samples, gen_samples, i, folder)
 
         return d_loss, g_loss, ae_loss
 
@@ -151,7 +155,7 @@ class SR(object):
                 print('SR loss={}'.format(loss))
 
 
-if __name__ == '__main__':
+def two_layer_aae():
     batch_size = 32
     epochs = 2000
     # (x_train, y_train), (_, _) = keras.datasets.mnist.load_data()
@@ -179,6 +183,21 @@ if __name__ == '__main__':
     gs = sr.srer.predict(gs)
     gs = aae1.autoencoder.predict(gs)
     AAE.save_samples(gs, gs, 0, 'img')
+
+def original_aae():
+    batch_size = 32
+    epochs = 20000
+    # (x_train, _), (_, _) = keras.datasets.cifar10.load_data()
+    (x_train, y_train), (_, _) = keras.datasets.mnist.load_data()
+    x_train = (x_train.astype(np.float32) - 127.5) / 127.5
+    train_data = np.expand_dims(x_train, 3)
+    # train_data = x_train
+    # aae = AAE([32, 32, 3], [32, 32, 3], 256)
+    aae = AAE([28, 28, 1], [28, 28, 1], 256)
+    aae.train(batch_size, train_data, epochs, 'imgs')
+
+if __name__ == '__main__':
+    original_aae()
 
 
 
