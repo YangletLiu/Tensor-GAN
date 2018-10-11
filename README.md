@@ -7,4 +7,4 @@
 ![image](https://github.com/hust512/Tensor-GAN/blob/master/2DSC/balloon_sc_result.png)
 
 ## Tensor GAN
-- The codes of Tensor GAN are in the repository `./TGAN`.
+- The codes are under developping, which are in the repository `./TGAN`.
