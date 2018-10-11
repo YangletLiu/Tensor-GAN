@@ -89,5 +89,7 @@ if __name__ == '__main__':
     C = tensor_tsta(img_p, D, C)
     img_p_ = tensor_product(D, '', C, '')
     img_ = block_3d_tensor(img_p_, img.shape)
+    img = img*0.5 + 0.5
+    img_ = img_*0.5 + 0.5
     save_img(img, './out/origin.png')
     save_img(img_, './out/recon.png')
