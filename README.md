@@ -6,6 +6,8 @@
 
 ![image](https://github.com/hust512/Tensor-GAN/blob/master/pics/balloon_sc_result.png)
 
+Figure 1. The experiment of tensor sparse coding.
+
 # Tensor GAN
 
 ## Introduction
@@ -13,4 +15,10 @@
 
 ## Architechture
 ![image](https://github.com/hust512/Tensor-GAN/blob/master/pics/arch.jpg)
+
+Figure 2. The architechture of tensor GAN.
+
+![image](https://github.com/hust512/Tensor-GAN/blob/master/pics/dict.png)
+
+Figure 3. The tensor dictionary.
 
