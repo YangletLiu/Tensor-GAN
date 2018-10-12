@@ -21,3 +21,5 @@
 <div align=center><img width="600" src="https://github.com/hust512/Tensor-GAN/blob/master/pics/dict.png"/></div>
 <div align=center> Figure 3. The tensor dictionary.</div>
 
+## Experiment
+We have tested that the high-quality image generation from a low-resolution image.
