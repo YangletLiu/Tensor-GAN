@@ -22,4 +22,6 @@
 <div align=center> Figure 3. The tensor dictionary.</div>
 
 ## Experiment
-We have tested that the high-quality image generation from a low-resolution image.
+We have tested the high-quality image generation from a low-resolution image via tensor combined dictionary.
+
+<div align=center><img width="600" src="https://github.com/hust512/Tensor-GAN/blob/master/pics/balloons_sr_result.png"/></div>
