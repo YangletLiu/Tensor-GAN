@@ -6,7 +6,7 @@
 
 ![image](https://github.com/hust512/Tensor-GAN/blob/master/pics/balloon_sc_result.png)
 
-<center>Figure 1. The experiment of tensor sparse coding.<
+<div align=center>Figure 1. The experiment of tensor sparse coding.</div>
 
 # Tensor GAN
 
@@ -14,12 +14,10 @@
 - The codes are in the repository `./TGAN`.
 
 ## Architechture
-![image](https://github.com/hust512/Tensor-GAN/blob/master/pics/arch.jpg)
 <div align=center><img width="800" src="https://github.com/hust512/Tensor-GAN/blob/master/pics/arch.jpg"/></div>
 
-<center>Figure 2. The architechture of tensor GAN.</center>
+<div align=center>Figure 2. The architechture of tensor GAN.</div>
 
-![image](https://github.com/hust512/Tensor-GAN/blob/master/pics/dict.png)
 <div align=center><img width="500" src="https://github.com/hust512/Tensor-GAN/blob/master/pics/dict.png"/></div>
-<center> Figure 3. The tensor dictionary.</center>
+<div align=center> Figure 3. The tensor dictionary.</div>
 
