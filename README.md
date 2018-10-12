@@ -19,6 +19,6 @@ Figure 1. The experiment of tensor sparse coding.
 Figure 2. The architechture of tensor GAN.
 
 ![image](https://github.com/hust512/Tensor-GAN/blob/master/pics/dict.png)
-
+<div align=center><img width="500" src="https://github.com/hust512/Tensor-GAN/blob/master/pics/dict.png"/></div>
 Figure 3. The tensor dictionary.
 
