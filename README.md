@@ -1,9 +1,10 @@
 ## Tensor Sparse Coding
 
-* [1] F. Jiang, X.-Y. Liu, H. Lu, R. Shen. Efficient multi-dimensional tensor sparse coding using t-linear combinations. AAAI, 2018.
+- [1] F. Jiang, X.-Y. Liu, H. Lu, R. Shen. Efficient multi-dimensional tensor sparse coding using t-linear combinations. AAAI, 2018.
 
-- The version of Python is in the folder `./2DSC`. Please run `main.py` to start.
-- The version of Tensorflow has been implemented, whose codes are in the folder `./tensorflow`. Please run `train.py` to start. Then the reconstructions by tensor sparse coding will be saved in `./tensorflow/out/`.
+- The version of Python is in the repository `./2DSC`. Please run `main.py` to start. And the version of Tensorflow is in the repository `./2DSC/tensorflow`. Please run `train.py` to start. 
+
+![image](https://github.com/hust512/Tensor-GAN/blob/master/2DSC/balloon_sc_result.png)
 
 ## Tensor GAN
-- Run `tgan` to train and generate images. We select CIFAR-10 dataset.
+- The codes are under developping, which are in the repository `./TGAN`.
