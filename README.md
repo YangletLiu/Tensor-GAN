@@ -18,6 +18,6 @@
 
 <div align=center>Figure 2. The architechture of tensor GAN.</div>
 
-<div align=center><img width="500" src="https://github.com/hust512/Tensor-GAN/blob/master/pics/dict.png"/></div>
+<div align=center><img width="600" src="https://github.com/hust512/Tensor-GAN/blob/master/pics/dict.png"/></div>
 <div align=center> Figure 3. The tensor dictionary.</div>
 
