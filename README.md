@@ -8,7 +8,7 @@
 
 # Tensor GAN
 
-# Introduction
+## Introduction
 - The codes are in the repository `./TGAN`.
 
 ## Architechture
