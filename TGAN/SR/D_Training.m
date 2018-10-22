@@ -17,7 +17,7 @@ iter        = 5;
 %fg = Omsi(1:100,1:100,:);
 
 %[Xh, Xl] = sample_patches2(fg, patch_size, nSmp, upscale);
-[Xh, Xl] = rnd_smp_patch('D:\Research\Tensor-SC-Super-Resolution\python\mnist_28_28_6.mat', patch_size, nSmp, upscale);
+[Xh, Xl] = rnd_smp_patch('..\data\mnist_28_28_7.mat', patch_size, nSmp, upscale);
 %save('samples\balloons_XhXl.mat', 'Xh', 'Xl')
 %load X2wno_diff_double5.mat
 %% prune patches with small variances, threshould chosen based on the training data
@@ -25,5 +25,5 @@ iter        = 5;
 %% joint sparse coding 
 [Dh, Dl] = train_coupled_dict(Xh, Xl, dict_size, lambda, iter);
 %dict_path = ['Dictionary/Dque_' num2str(dict_size) '_' num2str(lambda) '_' num2str(patch_size) '_' num2str(iter) '.mat' ];
-save('samples\balloons_dict.mat', 'Dh', 'Dl')
+save('..\data\mnist_28_28_7_dict.mat', 'Dh', 'Dl')
 toc

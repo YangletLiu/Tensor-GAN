@@ -13,10 +13,10 @@ n_pic = 10;
 load('samples/balloons_101_101_31.mat');
 % Testdata = fg(1:106,1:106,1:106);
 Testdata = Omsi(1:100,1:100,:);
-load('D:\Research\Tensor-SC-Super-Resolution\python\mnist_28_28_6.mat');
-load('D:\Research\Tensor-GAN\TGAN\mnist_test.mat');
-load('samples/balloons_dict.mat');
-YY = 255*YY;
+load('..\data\mnist_28_28_7.mat');
+load('..\data\mnist_28_28_7_dict.mat');
+load('..\data\mnist_test_14_14_7.mat');
+%YY = 255*YY;
 ns = randperm(size(YY,1));
 for i=1:1:n_pic
     Testdata = squeeze(YY(ns(i),:,:,:));
