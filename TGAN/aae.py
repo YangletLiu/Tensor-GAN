@@ -44,8 +44,8 @@ class AAE(object):
         self.generator = keras.Model(x, d)
         self.generator.compile(optimizer=optimizer, loss='binary_crossentropy')
 
-        self.discriminator.summary()
-        self.autoencoder.summary()
+        # self.discriminator.summary()
+        # self.autoencoder.summary()
 
     def _create_encoder(self):
         x = keras.Input(shape=self.input_shape)
@@ -99,9 +99,23 @@ class AAE(object):
 
             if i % 100 == 0:
                 print('epoch {}: D loss: {}, G loss: {}, AutoEncoder loss: {}'.format(i, d_loss, g_loss, ae_loss))
-                zs = np.random.normal(size=[batch_size, self.latent_dim])
+                zs = np.random.normal(size=[8, self.latent_dim])
                 gen_samples = self.decoder.predict(zs)
+                # gen_samples = gen_samples * 0.5 + 0.5
                 self.save_samples(gen_samples, gen_samples, i, folder)
+            if i % 1000 == 0:
+                zs = np.random.normal(size=[10, self.latent_dim])
+                gen_samples = self.decoder.predict(zs)
+                samples = []
+                for j in range(gen_samples.shape[0]):
+                    data = np.zeros((28, 28, 6))
+                    for s in range(data.shape[2]):
+                        temp = transform.resize(gen_samples[j], [28, 28])
+                        data[:, 0:(22 + 1 * s), s] = np.squeeze(temp[:, (6 - 1 * s):28])
+                    samples.append(data)
+                samples = np.array(samples)
+
+                sio.savemat('mnist_test.mat', {'YY': samples})
 
         return d_loss, g_loss, ae_loss
 
@@ -186,15 +200,35 @@ def two_layer_aae():
 
 def original_aae():
     batch_size = 32
-    epochs = 20000
-    # (x_train, _), (_, _) = keras.datasets.cifar10.load_data()
+    epochs = 30000
     (x_train, y_train), (_, _) = keras.datasets.mnist.load_data()
-    x_train = (x_train.astype(np.float32) - 127.5) / 127.5
+    # (x_train, _), (_, _) = keras.datasets.cifar10.load_data()
+    # x_train = (x_train.astype(np.float32) - 127.5) / 127.5
+    # train_data = x_train[np.where(y_train == 1)[0]]
     train_data = np.expand_dims(x_train, 3)
     # train_data = x_train
-    # aae = AAE([32, 32, 3], [32, 32, 3], 256)
-    aae = AAE([28, 28, 1], [28, 28, 1], 256)
+    train_data = []
+    for i in range(x_train.shape[0]):
+        pic = (transform.resize(x_train[i], (14, 14)))
+        pic = np.expand_dims(pic, 3)
+        train_data.append(pic)
+    train_data = np.array(train_data)
+    aae = AAE([14, 14, 1], [14, 14, 1], 256)
     aae.train(batch_size, train_data, epochs, 'imgs')
+
+    zs = np.random.normal(size=[10, aae.latent_dim])
+    gen_samples = aae.decoder.predict(zs)
+    samples = []
+    for i in range(gen_samples.shape[0]):
+        data = np.zeros((28,28,6))
+        for s in range(data.shape[2]):
+            temp = transform.resize(gen_samples[i],[28,28])
+            data[:,0:(22+1*s),s] = np.squeeze(temp[:,(6-1*s):28])
+        samples.append(data)
+    samples = np.array(samples)
+
+    sio.savemat('mnist_test.mat', {'YY': samples})
+
 
 if __name__ == '__main__':
     original_aae()
