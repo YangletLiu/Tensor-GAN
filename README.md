@@ -14,9 +14,10 @@
 - The codes are in the repository `./TGAN`.
 
 ## Usage
-- First, run `aae.py` to generate tensor samples composed of MNIST images from random distributions. 
+- Firstly, run `GAN.py` to train a generative model which is used to generate low-quality tensors. 
+- Secondly, run `gen_training_data.py` to combine low-quality and high-quality training data.
 - Then, run `./SR/D_Training.m` to train a combined tensor dictionary.
-- Last, run `./SR/Demo_SR.m` to generate high-qulity images.
+- Lastly, run `gen_test_data.py` to use GANs to generate low-quality images. And run `./SR/Demo_SR.m` to generate high-qulity images.
 
 ## Architechture
 <div align=center><img width="800" src="https://github.com/hust512/Tensor-GAN/blob/master/pics/arch.jpg"/></div>
