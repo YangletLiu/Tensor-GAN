@@ -12,6 +12,7 @@ from skimage import transform
 
 
 learning_rate = 1e-3
+LAMBDA = 10
 
 
 def lrelu(x, alpha=0.2):
@@ -174,14 +175,12 @@ class Network(object):
 
 
 class GAN(object):
-    def __init__(self, img_shape, latent_dim, LAMBDA, SIGMA, batch_size):
+    def __init__(self, img_shape, latent_dim, batch_size):
         self.img_shape = img_shape
         self.latent_dim = latent_dim
         self.batch_size = batch_size
         # self.learning_rate = learning_rate
         # self.vgg = VGG19(None, None, None)
-        self.LAMBDA = LAMBDA
-        self.SIGMA = SIGMA
 
         self.G_params = []
         self.D_params = []
@@ -201,13 +200,12 @@ class GAN(object):
             scope.reuse_variables()
             self.D_fake = self.discriminator(self.g)
 
-        content_loss = self.reconstruction_loss(self.x, self.g)
-
         disc_loss = -tf.reduce_mean(self.D_real) + tf.reduce_mean(self.D_fake)
         gen_loss = -tf.reduce_mean(self.D_fake)
 
         alpha = tf.random_uniform(
-            shape=[self.batch_size, 1],
+            # shape=[self.batch_size, 1],
+            shape=(tf.shape(self.y)[0], 1),
             minval=0.,
             maxval=1.
         )
@@ -222,8 +220,9 @@ class GAN(object):
         slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
         gradient_penalty = tf.reduce_mean((slopes - 1.) ** 2)
 
-        self.D_loss = self.SIGMA * (disc_loss + self.LAMBDA * gradient_penalty)
-        self.G_loss = content_loss + self.SIGMA * gen_loss
+        self.D_loss = disc_loss + LAMBDA * gradient_penalty
+        # self.G_loss = content_loss + self.SIGMA * gen_loss
+        self.G_loss = gen_loss
 
         self.D_opt = tf.train.AdamOptimizer(
             learning_rate=learning_rate,
@@ -357,8 +356,6 @@ def show_result(xs, zs, gs):
 
 
 if __name__ == '__main__':
-    LAMBDA = 10
-    SIGMA = 1e-3
     batch_size = 32
     step_num = 10000
     latent_dim = 128
@@ -367,7 +364,7 @@ if __name__ == '__main__':
 
     data = input_data.read_data_sets("./MNIST_data", one_hot=True)
 
-    g = GAN([14, 14, 1], latent_dim, LAMBDA, SIGMA, batch_size)
+    g = GAN([14, 14, 1], latent_dim, batch_size)
 
     if not os.path.exists('./backup/'):
         os.mkdir('./backup/')
