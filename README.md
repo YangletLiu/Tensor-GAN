@@ -14,7 +14,7 @@
 - The codes are in the repository `./TGAN`.
 
 ## Usage
-- First, run `aae.py` to generate tensor samples that composed of MNIST images. 
+- First, run `aae.py` to generate tensor samples composed of MNIST images from random distributions. 
 - Then, run `./SR/D_Training.m` to train a combined tensor dictionary.
 - Last, run `./SR/Demo_SR.m` to generate high-qulity images.
 
