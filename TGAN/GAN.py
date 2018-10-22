@@ -384,11 +384,11 @@ if __name__ == '__main__':
         for _ in range(5):
             xs, _ = data.train.next_batch(batch_size)
             xs = np.reshape(xs, (-1, 28, 28, 1))
-            zs = np.random.normal(size=[batch_size, latent_dim])
+            zs = np.random.uniform(size=[batch_size, latent_dim])
             # xs = np.expand_dims(xs, axis=-1)
             _, dloss = sess.run([g.D_opt, g.D_loss], feed_dict={g.z:zs, g.y:xs})
 
-        zs = np.random.normal(size=[batch_size, latent_dim])
+        zs = np.random.uniform(size=[batch_size, latent_dim])
         xs, _ = data.train.next_batch(batch_size)
         xs = np.reshape(xs, (-1, 28, 28, 1))
         # xs = np.expand_dims(xs, axis=-1)
@@ -396,7 +396,7 @@ if __name__ == '__main__':
 
         if step % 100 == 0:
             saver.save(sess, './backup/', write_meta_graph=False)
-            zs = np.random.normal(size=[3, latent_dim])
+            zs = np.random.uniform(size=[3, latent_dim])
             gs = sess.run(g.g, feed_dict={g.z:zs})
             show_result(gs[0], gs[1], gs[2])
             print('step: {}, D_loss: {}, G_loss:{}'.format(step, dloss, gloss))
