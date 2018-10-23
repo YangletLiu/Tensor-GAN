@@ -14,8 +14,9 @@
 - The codes are in the repository `./TGAN`.
 
 ## Usage
-- Firstly, run `GAN.py` to train a generative model which is used to generate low-quality tensors. 
-- Secondly, run `gen_training_data.py` to combine low-quality and high-quality training data.
+Basicly, we select MNIST dataset as an example.
+- Firstly, run `GAN.py` to train a generative model which is used to generate low-quality tensors with size `14 * 14 * 7` from a random distribution. 
+- Secondly, run `gen_training_data.py`, which is used to generate training data consists of pairs of low-quality images and high-qulity images. As downscaled from the original MNIST images with size `28 * 28`, the low-quality image is of size `14 * 14 * 7`, which is concated by single images shifted with different pixels. 
 - Then, run `./SR/D_Training.m` to train a combined tensor dictionary.
 - Lastly, run `gen_test_data.py` to use GANs to generate low-quality images. And run `./SR/Demo_SR.m` to generate high-qulity images.
 
