@@ -175,10 +175,9 @@ class Network(object):
 
 
 class GAN(object):
-    def __init__(self, img_shape, latent_dim, batch_size):
+    def __init__(self, img_shape, latent_dim):
         self.img_shape = img_shape
         self.latent_dim = latent_dim
-        self.batch_size = batch_size
         # self.learning_rate = learning_rate
         # self.vgg = VGG19(None, None, None)
 
@@ -364,7 +363,7 @@ if __name__ == '__main__':
 
     data = input_data.read_data_sets("./MNIST_data", one_hot=True)
 
-    g = GAN([14, 14, 1], latent_dim, batch_size)
+    g = GAN([14, 14, 1], latent_dim)
 
     if not os.path.exists('./backup/'):
         os.mkdir('./backup/')
