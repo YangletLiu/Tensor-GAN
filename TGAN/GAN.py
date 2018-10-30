@@ -237,25 +237,18 @@ class GAN(object):
     def generator(self, z):
         G = Network()
         # Network.deconv2d(input, input_shape, output_dim, filter_size, stride)
-        h = G.dense(z, np.prod(self.img_shape))
-        h = tf.reshape(h, (tf.shape(h)[0], self.img_shape[0], self.img_shape[1], self.img_shape[2]))
-        h = tf.nn.relu(G.deconv2d(h, 64, 3, 1))
-        bypass = h
+        h = G.dense(z, np.prod((self.img_shape[0], self.img_shape[1], 64)))
+        h = tf.reshape(h, (tf.shape(h)[0], self.img_shape[0], self.img_shape[1], 64))
+        h = tf.nn.relu(G.deconv2d(h, 32, 3, 1))
+        # bypass = h
 
-        h = G.residual_block(h, 64, 3, 2)
+        # h = G.residual_block(h, 64, 3, 2)
 
-        h = G.deconv2d(h, 64, 3, 1)
-        h = G.batch_norm(h)
-        h = tf.add(h, bypass)
+        h = G.deconv2d(h, 16, 3, 1)
+        # h = G.batch_norm(h)
+        # h = tf.add(h, bypass)
 
-        # h = G.deconv2d(h, 256, 3, 1)
-        # h = G.pixel_shuffle(h, 2, 64)
-        # h = tf.nn.relu(h)
-
-        # h = G.deconv2d(h, 64, 3, 1)
-        # h = G.pixel_shuffle(h, 2, 16)
-        # h = tf.nn.relu(h)
-        h = G.deconv2d(h, 64, 3, 1)
+        h = G.deconv2d(h, 8, 3, 1)
 
         h = G.deconv2d(h, self.img_shape[2], 3, 1)
         h = tf.nn.sigmoid(h)
@@ -267,14 +260,14 @@ class GAN(object):
     def discriminator(self, x):
         D = Network()
         # Network.conv2d(input, output_dim, filter_size, stride, padding='SAME')
-        h = D.conv2d(x, self.img_shape[2], 64, 3, 1)
+        h = D.conv2d(x, self.img_shape[2], 32, 3, 1)
         h = lrelu(h)
 
         # h = D.conv2d(h, 64, 64, 3, 1)
         # h = lrelu(h)
         # h = D.batch_norm(h)
 
-        map_nums = [64, 128, 256]
+        map_nums = [32, 64, 128]
 
         for i in range(len(map_nums) - 1):
             h = D.conv2d(h, map_nums[i], map_nums[i + 1], 3, 1)
