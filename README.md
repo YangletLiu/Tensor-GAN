@@ -27,7 +27,7 @@ Basicly, we select MNIST dataset as an example.
 
 - Tensor dictionary training: HT and LT are used to train a high resolution dictionary (HD) and a low resolution dictionary (LD) which have a same shape. With the same sparse coefficients caculated by the LD, a high-resolution image tensor (HTS) with shape `28 * 28 * 7` is generated from the low-resolution image tensor sample (LTS). 
 
-- Dimensional variation: latent vector (`128 * 1`)(DCGAN) → LS (`14 * 14 * 1`) → LTS (`14 * 14 * 7`) →(SR) HTS (`28 * 28 * 7`)
+- Dimensional variation: latent vector (`128 * 1`) →(DCGAN) LS (`14 * 14 * 1`) → LTS (`14 * 14 * 7`) →(SR) HTS (`28 * 28 * 7`)
 
 ## Architechture
 <div align=center><img width="800" src="https://github.com/hust512/Tensor-GAN/blob/master/pics/arch.jpg"/></div>
