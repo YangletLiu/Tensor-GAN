@@ -20,6 +20,15 @@ Basicly, we select MNIST dataset as an example.
 - Then, run `./SR/D_Training.m` to train a combined tensor dictionary.
 - Lastly, run `gen_test_data.py` to use GANs to generate low-quality images. And run `./SR/Demo_SR.m` to generate high-qulity images.
 
+## Dataflow
+- Dataset: In order to adapt the data to our tensor theory, the MNIST dataset are transformed to the image tensors (HT) with size `28 * 28 * 7`, concatenating `7` images which are shifted from the same single image with different pixels. Then downscaling the HT with `2x`, we get low-resolution image tensors (LT), which is of size `14 * 14 * 7`.
+
+- Low-resolution images generating: A DCGAN with gradient penalty is applied to generate low-resolution images (LS) with size `14 * 14 * 1` from a latent vector with size `128 * 1`. Similarly, we concatenate `7` shifted LIs into tensors with size `14 * 14 * 7`, named LTS.
+
+- Tensor dictionary training: HT and LT are used to train a high resolution dictionary (HD) and a low resolution dictionary (LD) which have a same shape. With the same sparse coefficients caculated by the LD, a high-resolution image tensor (HTS) with shape `28 * 28 * 7` is generated from the low-resolution image tensor sample (LTS). 
+
+- dimensional chanegs: latent vector (`128 * 1`) \rightarrow LS (`14 * 14 * 1`) \rightarrow LTS (`14 * 14 * 7`) \rightarrow  HTS (`28 * 28 * 7`)
+
 ## Architechture
 <div align=center><img width="800" src="https://github.com/hust512/Tensor-GAN/blob/master/pics/arch.jpg"/></div>
 
