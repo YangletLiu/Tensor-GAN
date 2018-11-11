@@ -316,7 +316,7 @@ if __name__ == '__main__':
     step_num = 100000
     batch_size = 32
 
-    ae = ConvWganGpMnist(
+    g = ConvWganGpMnist(
         z_shape=100,
         batch_size=batch_size,
         step_num=step_num,
@@ -325,7 +325,7 @@ if __name__ == '__main__':
         DIM=64,
         data=data
     )
-    ae.train()
+    g.train()
 
 
 
