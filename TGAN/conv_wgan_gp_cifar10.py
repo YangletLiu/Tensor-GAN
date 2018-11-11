@@ -52,7 +52,8 @@ class ConvWganGpCifar10(object):
         self.LAMBDA = LAMBDA
 
         self.z = tf.placeholder(tf.float32, [None, self.z_shape], name='z')
-        self.x = tf.placeholder(tf.float32, [None, 784], name='x')
+        self.xv = tf.placeholder(tf.float32, [None, 32, 32, 3], name='xv')
+        self.x = tf.reshape(self.xv, [-1, 3072], name='x')
 
         # Generator
         with tf.variable_scope('Generator'):
@@ -82,7 +83,7 @@ class ConvWganGpCifar10(object):
                 name='deconv_b3'
             )
             self.G_W4 = tf.Variable(
-                he_init([5, 5, 1, self.DIM], 2),
+                he_init([5, 5, 3, self.DIM], 2),
                 name='deconv_W4'
             )
             self.G_b4 = tf.Variable(
@@ -98,7 +99,7 @@ class ConvWganGpCifar10(object):
 
         # Discriminator
         with tf.variable_scope('Discriminator'):
-            self.D_W1 = tf.Variable(he_init([5, 5, 1, self.DIM], 2),
+            self.D_W1 = tf.Variable(he_init([5, 5, 3, self.DIM], 2),
                                     name='conv_W1'
                                     )
             self.D_b1 = tf.Variable(tf.zeros([self.DIM]),
@@ -134,7 +135,7 @@ class ConvWganGpCifar10(object):
         self.g = self._generator(self.z)
         self.D_real = self._discriminator(self.x)
         self.D_fake = self._discriminator(self.g)
-        self.gm = self.downscale(tf.reshape(self.g, (-1, 32, 32, 1)), 2)
+        self.gm = self.downscale(tf.reshape(self.g, (-1, 32, 32, 3)), 2)
 
         self.loss_dis = -tf.reduce_mean(self.D_real) + tf.reduce_mean(self.D_fake)
         self.loss_gen = -tf.reduce_mean(self.D_fake)
@@ -144,11 +145,9 @@ class ConvWganGpCifar10(object):
             minval=0.,
             maxval=1.
         )
-        x_ = tf.reshape(self.x, (-1, 32*32*3))
-        g_ = tf.reshape(self.g, (-1, 32*32*3))
 
-        differences = g_ - x_
-        interpolates = x_ + alpha * differences
+        differences = self.g - self.x
+        interpolates = self.x + alpha * differences
         gradients = tf.gradients(self._discriminator(interpolates), [interpolates])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
         gradient_penalty = tf.reduce_mean((slopes - 1.) ** 2)
@@ -209,10 +208,10 @@ class ConvWganGpCifar10(object):
             padding='SAME'
         ), self.G_b4)
         )
-        return current_output
+        return tf.reshape(current_output, [-1, 32*32*3])
 
     def _discriminator(self, x):
-        current_input = x
+        current_input = tf.reshape(x, [-1, 32, 32, 3])
 
         current_output = lrelu(tf.add(tf.nn.conv2d(
             input=current_input,
@@ -265,8 +264,12 @@ class ConvWganGpCifar10(object):
         return fig
 
     def train(self):
-        (x_train, _), (_, _) = keras.datasets.cifar10.load_data()
-        data = x_train / 255.
+        (x_train, y_train), (_, _) = keras.datasets.cifar10.load_data()
+        data = []
+        for i in range(x_train.shape[0]):
+            if y_train[i] == 1:
+                data.append(x_train[i])
+        data = np.array(data) / 255.
         sess = tf.Session()
         init = tf.global_variables_initializer()
         sess.run(init)
@@ -278,6 +281,8 @@ class ConvWganGpCifar10(object):
             os.makedirs('out/')
         if not os.path.exists('./backup/'):
             os.mkdir('./backup/')
+        if not os.path.exists('./backup/cifar10/'):
+            os.mkdir('./backup/cifar10/')
 
         for step in range(self.step_num):
             for _ in range(5):
@@ -286,11 +291,13 @@ class ConvWganGpCifar10(object):
                 zs = sample_z(self.batch_size, self.z_shape)
                 _, l_dis = sess.run(
                     [self.opt_dis, self.loss_dis],
-                    feed_dict={self.z: zs, self.x: xs}
+                    feed_dict={self.z: zs, self.xv: xs}
                 )
 
+            indices = np.random.randint(0, data.shape[0], batch_size)
+            xs = data[indices]
             zs = sample_z(self.batch_size, self.z_shape)
-            _, l_gen = sess.run([self.opt_gen, self.loss_gen], feed_dict={self.z: zs})
+            _, l_gen = sess.run([self.opt_gen, self.loss_gen], feed_dict={self.z: zs, self.xv:xs})
 
             if step % 100 == 0:
                 print('Step: {}, loss_dis = {:.5}, loss_gen = {:.5}' .format(step, l_dis, l_gen))
@@ -301,7 +308,7 @@ class ConvWganGpCifar10(object):
                 plt.savefig('out/{}.png'.format(str(step).zfill(6)), bbox_inches='tight')
                 plt.close(fig)
             if step % 500 == 0:
-                saver.save(sess, './backup/', write_meta_graph=False)
+                saver.save(sess, './backup/cifar10/', write_meta_graph=False)
 
         sess.close()
 

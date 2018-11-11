@@ -280,6 +280,8 @@ class ConvWganGpMnist(object):
             os.makedirs('out/')
         if not os.path.exists('./backup/'):
             os.mkdir('./backup/')
+        if not os.path.exists('./backup/mnist/'):
+            os.mkdir('./backup/mnist/')
 
         for step in range(self.step_num):
             for _ in range(5):
@@ -290,8 +292,9 @@ class ConvWganGpMnist(object):
                     feed_dict={self.z: zs, self.x: xs}
                 )
 
+            xs, ys = data.train.next_batch(batch_size)
             zs = sample_z(self.batch_size, self.z_shape)
-            _, l_gen = sess.run([self.opt_gen, self.loss_gen], feed_dict={self.z: zs})
+            _, l_gen = sess.run([self.opt_gen, self.loss_gen], feed_dict={self.z: zs, self.x: xs})
 
             if step % 100 == 0:
                 print('Step: {}, loss_dis = {:.5}, loss_gen = {:.5}' .format(step, l_dis, l_gen))
@@ -302,7 +305,7 @@ class ConvWganGpMnist(object):
                 plt.savefig('out/{}.png'.format(str(step).zfill(6)), bbox_inches='tight')
                 plt.close(fig)
             if step % 500 == 0:
-                saver.save(sess, './backup/', write_meta_graph=False)
+                saver.save(sess, './backup/mnist/', write_meta_graph=False)
 
         sess.close()
 

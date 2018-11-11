@@ -10,13 +10,13 @@ upscale = 2;                   % scaling factor, depending on the trained dictio
 % maxIter = 20;                   % if 0, do not use backprojection
 n_pic = 10;
 %% read test data and upscale
-load('samples/balloons_101_101_31.mat');
+%load('samples/balloons_101_101_31.mat');
 % Testdata = fg(1:106,1:106,1:106);
-Testdata = Omsi(1:100,1:100,:);
+%Testdata = Omsi(1:100,1:100,:);
 load('..\data\mnist_28_28_7.mat');
 load('..\data\mnist_28_28_7_dict.mat');
 load('..\data\mnist_test_14_14_7.mat');
-%YY = 255*YY;
+YY = 255*YY;
 ns = randperm(size(YY,1));
 for i=1:1:n_pic
     Testdata = squeeze(YY(ns(i),:,:,:));
@@ -31,13 +31,13 @@ for i=1:1:n_pic
     [seismic_h] = ScSR362(seismic_l, upscale, Dh, Dl, lambda, overlap);
     seismic_h (1:upscale:nrow,1:upscale:ncol,:) = Testdata(1:upscale:nrow,1:upscale:ncol,:);
     seismic_h(isnan(seismic_h)) = 0;
-    seismic_h(find(seismic_h<32))=0;
+    %seismic_h(find(seismic_h<0))=0;
     subplot(2,n_pic,i);
-    image(seismic_l(:,:,3));
+    image(seismic_l(:,:,4));
     set(gca,'xtick',[],'xticklabel',[])
     set(gca,'ytick',[],'yticklabel',[])
     subplot(2,n_pic,n_pic+i);
-    image(seismic_h(:,:,3))
+    image(seismic_h(:,:,4))
     set(gca,'xtick',[],'xticklabel',[])
     set(gca,'ytick',[],'yticklabel',[])
 
