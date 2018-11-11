@@ -38,7 +38,7 @@ def sample_z(m, n):
     return np.random.uniform(-1., 1., size=[m, n])
 
 
-class ConvWGAN_GP(object):
+class ConvWganGpMnist(object):
 
     def __init__(self, batch_size, z_shape,
                  step_num, learning_rate, LAMBDA, DIM, data):
@@ -316,7 +316,7 @@ if __name__ == '__main__':
     step_num = 100000
     batch_size = 32
 
-    ae = ConvWGAN_GP(
+    ae = ConvWganGpMnist(
         z_shape=100,
         batch_size=batch_size,
         step_num=step_num,
