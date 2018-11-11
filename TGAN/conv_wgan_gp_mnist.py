@@ -41,7 +41,7 @@ def sample_z(m, n):
 class ConvWganGpMnist(object):
 
     def __init__(self, batch_size, z_shape,
-                 step_num, learning_rate, LAMBDA, DIM, data):
+                 step_num, learning_rate, LAMBDA, DIM):
 
         self.z_shape = z_shape
         self.batch_size = batch_size
@@ -49,7 +49,6 @@ class ConvWganGpMnist(object):
         self.learning_rate = learning_rate
         self.DIM = DIM
         self.LAMBDA = LAMBDA
-        self.data = data
 
         self.z = tf.placeholder(tf.float32, [None, self.z_shape], name='z')
         self.x = tf.placeholder(tf.float32, [None, 784], name='x')
@@ -268,6 +267,8 @@ class ConvWganGpMnist(object):
         return fig
 
     def train(self):
+        from tensorflow.examples.tutorials.mnist import input_data
+        data = input_data.read_data_sets("MNIST_data", one_hot=True)
         sess = tf.Session()
         init = tf.global_variables_initializer()
         sess.run(init)
@@ -282,7 +283,7 @@ class ConvWganGpMnist(object):
 
         for step in range(self.step_num):
             for _ in range(5):
-                xs, ys = self.data.train.next_batch(batch_size)
+                xs, ys = data.train.next_batch(batch_size)
                 zs = sample_z(self.batch_size, self.z_shape)
                 _, l_dis = sess.run(
                     [self.opt_dis, self.loss_dis],
@@ -307,9 +308,6 @@ class ConvWganGpMnist(object):
 
 
 if __name__ == '__main__':
-    from tensorflow.examples.tutorials.mnist import input_data
-
-    data = input_data.read_data_sets("MNIST_data", one_hot=True)
 
     learning_rate = 1e-4
     LAMBDA = 10
@@ -322,8 +320,7 @@ if __name__ == '__main__':
         step_num=step_num,
         learning_rate=learning_rate,
         LAMBDA=LAMBDA,
-        DIM=64,
-        data=data
+        DIM=64
     )
     g.train()
 
