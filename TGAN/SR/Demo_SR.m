@@ -8,16 +8,25 @@ lambda = 0.01;                  % sparsity regularization
 overlap = 3 ;                    % the more overlap the better (patch size 5x5)
 upscale = 2;                   % scaling factor, depending on the trained dictionary
 % maxIter = 20;                   % if 0, do not use backprojection
-n_pic = 10;
+n_pic = 32;
 %% read test data and upscale
 %load('samples/balloons_101_101_31.mat');
 % Testdata = fg(1:106,1:106,1:106);
 %Testdata = Omsi(1:100,1:100,:);
+
 load('..\data\mnist_28_28_7.mat');
 load('..\data\mnist_28_28_7_dict.mat');
 load('..\data\mnist_test_14_14_7.mat');
-YY = 255*YY;
+res = zeros(n_pic, 28, 28);
+
+% load('..\data\cifar10_32_32_9.mat');
+% load('..\data\cifar10_32_32_9_dict.mat');
+% load('..\data\cifar10_test_16_16_9.mat');
+% res = zeros(n_pic, 32, 32, 3);
+%YY = 255*YY;
 ns = randperm(size(YY,1));
+
+
 for i=1:1:n_pic
     Testdata = squeeze(YY(ns(i),:,:,:));
     [nrow,ncol,nFrames] = size(Testdata);
@@ -25,7 +34,6 @@ for i=1:1:n_pic
     seismic_l_half = Testdata(1:upscale:nrow,:,:);%Í¼Ïñ³ß´çËõ¼õÒ»°ë
 %% super-resolution
 % load dictionary
-
 %load('Dictionary/Dque_128_0.05_5_5.mat');
 % super-resolution based on sparse representation
     [seismic_h] = ScSR362(seismic_l, upscale, Dh, Dl, lambda, overlap);
@@ -33,15 +41,18 @@ for i=1:1:n_pic
     seismic_h(isnan(seismic_h)) = 0;
     %seismic_h(find(seismic_h<0))=0;
     subplot(2,n_pic,i);
-    image(seismic_l(:,:,4));
-    set(gca,'xtick',[],'xticklabel',[])
-    set(gca,'ytick',[],'yticklabel',[])
+    image(seismic_l(:,:,4:6));
+    set(gca,'xtick',[],'xticklabel',[]);
+    set(gca,'ytick',[],'yticklabel',[]);
     subplot(2,n_pic,n_pic+i);
-    image(seismic_h(:,:,4))
-    set(gca,'xtick',[],'xticklabel',[])
-    set(gca,'ytick',[],'yticklabel',[])
+    image(seismic_h(:,:,4:6))
+    set(gca,'xtick',[],'xticklabel',[]);
+    set(gca,'ytick',[],'yticklabel',[]);
+    res(i,:,:) = seismic_h(:,:,4);
 
 end
+% save('../data/cifar10_results.mat', 'res');
+save('../data/mnist_results.mat', 'res');
 RSE = norm(seismic_h(:) - Testdata(:)) / norm(Testdata(:));
 % backprojection
 %  for k = 3

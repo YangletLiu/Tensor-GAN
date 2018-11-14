@@ -13,7 +13,7 @@ from conv_wgan_gp_cifar10 import *
 
 
 def mnist():
-    n_samples = 16
+    n_samples = 32
     n_slice = 7
     n_step = 1
     img_shape = (28, 28, 1)
@@ -54,7 +54,7 @@ def mnist():
     sio.savemat('./data/mnist_test_14_14_7.mat', {'YY':datas})
 
 def cifar10():
-    n_samples = 16
+    n_samples = 32
     n_slice = 9
     n_step = 1
     img_shape = (32, 32, 3)
@@ -94,6 +94,8 @@ def cifar10():
 
     sio.savemat('./data/cifar10_test_16_16_9.mat', {'YY':datas})
 
+
 if __name__ == '__main__':
     mnist()
+    # cifar10()
 

@@ -29,6 +29,7 @@ def mnist():
 
     sio.savemat('./data/mnist_28_28_7.mat', {'XX':datas})
 
+
 def cifar10():
     n_slice = 9
     n_step = 1
@@ -40,15 +41,17 @@ def cifar10():
     for i in range(x_train.shape[0]):
         if y_train[i] == 1:
             data_train.append(x_train[i])
-    n_sample = len(x_train)
+    n_sample = len(data_train)
     datas = np.zeros((n_sample, img_shape[0], img_shape[1], n_slice))
     for i in range(n_sample):
         for k in range(n_slice//3):
             data = data_train[i]
             datas[i, :, :, (3*k):(3*(k+1))] = data
 
-    sio.savemat('./data/cifar10_28_28_7.mat', {'XX':datas})
+    sio.savemat('./data/cifar10_32_32_9.mat', {'XX':datas})
+
 
 
 if __name__ == '__main__':
-    mnist()
+    # mnist()
+    cifar10()
